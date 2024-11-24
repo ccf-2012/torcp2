@@ -476,7 +476,7 @@ class Torcp:
         foldername = destFolderName
         testFile = self.getFirstMediaFile(folderPath)
         if testFile:
-            p = TMDbNameParser(self.ARGS.tmdb_api_key, self.ARGS.tmdb_lang)
+            p = TMDbNameParser(self.ARGS.torcpdb_url, self.ARGS.torcpdb_apikey)
             p.parse(testFile, useTMDb=False)
             if not folderGroup:
                 group = p.group
@@ -617,7 +617,7 @@ class Torcp:
         return cat
 
     def genCatFolderName(self, parser):
-        if self.ARGS.tmdb_api_key and parser.tmdbid <= 0 and parser.tmdbcat in ['tv', 'movie']:
+        if self.ARGS.torcpdb_url and parser.tmdbid <= 0 and parser.tmdbcat in ['tv', 'movie']:
             return 'TMDbNotFound'
         else:
             if parser.tmdbcat == 'movie':
@@ -739,9 +739,9 @@ class Torcp:
                 if not folderTmdbParser.tmdbhard and (folderTmdbParser.tmdbid <= 0) or countMediaFiles > 1:
                     fnok = is0DayName(movieItem)
                     if fnok:
-                        pf = TMDbNameParser(self.ARGS.tmdb_api_key, self.ARGS.tmdb_lang,
+                        pf = TMDbNameParser(self.ARGS.torcpdb_url, self.ARGS.torcpdb_apikey,
                                             ccfcat_hard=self.setArgsCategory())
-                        pf.parse(movieItem, useTMDb=(self.ARGS.tmdb_api_key is not None))
+                        pf.parse(movieItem, useTMDb=(self.ARGS.torcpdb_url is not None))
                         pf.title = self.fixNtName(pf.title)
                         if pf.tmdbid > 0 or fnok:
                             p = pf
@@ -886,8 +886,8 @@ class Torcp:
 
         logger.info(" >> [%s] %s %s" % (itemName, imdbidstr, tmdbidstr))
         cat = self.setArgsCategory()
-        p = TMDbNameParser(self.ARGS.tmdb_api_key, self.ARGS.tmdb_lang, ccfcat_hard=cat)
-        p.parse(itemName, useTMDb=(self.ARGS.tmdb_api_key is not None), hasIMDbId=imdbidstr, hasTMDbId=tmdbidstr, exTitle=self.ARGS.extitle)
+        p = TMDbNameParser(self.ARGS.torcpdb_url, self.ARGS.torcpdb_apikey, ccfcat_hard=cat)
+        p.parse(itemName, useTMDb=(self.ARGS.torcpdb_url is not None), hasIMDbId=imdbidstr, hasTMDbId=tmdbidstr, exTitle=self.ARGS.extitle)
         p.title = self.fixNtName(p.title)
         cat = self.genCatFolderName(p)
 
@@ -1031,12 +1031,11 @@ class Torcp:
                             action='store_true',
                             help='seperate 7 dirs(us,cn,hk,tw,jp,kr,occident,other) by production area.')
         parser.add_argument(
-            '--tmdb-api-key',
-            help='Search API for the tmdb id, and gen dirname as Name (year)\{tmdbid=xxx\}'
+            '--torcpdb-url',
+            help='Search torcpdb API for the tmdb id'
         )
-        parser.add_argument('--tmdb-lang',
-                            default='zh-CN',
-                            help='specify the TMDb language')
+        parser.add_argument('--torcpdb-apikey',
+                            help='apikey for torcpdb API')
         parser.add_argument('--tv-folder-name',
                             default='TV',
                             help='specify the name of TV directory, default TV.')

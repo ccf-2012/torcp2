@@ -69,7 +69,7 @@ def parseTMDbStr(tmdbstr):
         return '', ''
 
 
-def query_media_name(json_data, api_url="http://127.0.0.1:5000"):
+def query_media_name(json_data, api_url="http://127.0.0.1:5009", torcpdb_apikey=''):
     """
     查询种子名称对应的媒体信息
     
@@ -103,6 +103,8 @@ def query_media_name(json_data, api_url="http://127.0.0.1:5000"):
         requests.RequestException: 当API请求失败时抛出异常
     """
     try:
+        if torcpdb_apikey:
+            json_data['api_key'] = torcpdb_apikey
         response = requests.post(
             f"{api_url}/api/query",
             json=json_data
@@ -114,7 +116,7 @@ def query_media_name(json_data, api_url="http://127.0.0.1:5000"):
         raise
 
 class TMDbNameParser():
-    def __init__(self, tmdb_api_key, tmdb_lang, ccfcat_hard=None):
+    def __init__(self, torcpdb_url, torcpdb_apikey, ccfcat_hard=None):
         self.ccfcatHard = ccfcat_hard
         self.ccfcat = ''
         self.title = ''
@@ -136,16 +138,8 @@ class TMDbNameParser():
         self.videoCodec = ''
         self.audioCodec = ''
 
-        self.tmdb_api_key = tmdb_api_key
-        self.tmdb_lang = tmdb_lang
-
-        # if tmdb_api_key:
-        #     self.tmdb = TMDb()
-        #     self.tmdb.api_key = tmdb_api_key
-        #     self.tmdb.language = tmdb_lang
-        # else:
-        #     self.tmdb = None
-            # self.tmdb.api_key = None
+        self.torcpdb_url = torcpdb_url
+        self.torcpdb_apikey = torcpdb_apikey
 
     def fixSeasonName(self, seasonStr):
         if re.match(r'^Ep?\d+(-Ep?\d+)?$', seasonStr,
@@ -158,8 +152,6 @@ class TMDbNameParser():
         ll = []
         if self.genre_ids:
             genre_list = GENRE_LIST_cn
-            if self.tmdb.language != 'zh-CN':
-                genre_list = GENRE_LIST_en
             for x in self.genre_ids:
                 s = next((y for y in genre_list if y['id']==x), None)
                 if s:
@@ -255,7 +247,7 @@ class TMDbNameParser():
                             "seed_name": torname,
                             "extitle": exTitle
                         }
-                    result = query_media_name(json_data)
+                    result = query_media_name(json_data, self.torcpdb_url, self.torcpdb_apikey)
                     if result['success']:
                         logger.success(f'success: {result["data"]["media_name"]},{result["data"]["tmdb_cat"]}-{result["data"]["tmdb_id"]}')
                         self.ccfcat = transToCCFCat(self.tmdbcat, self.ccfcat)
