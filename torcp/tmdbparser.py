@@ -132,6 +132,7 @@ class TMDbNameParser():
         self.original_language = ''
         self.popularity = 0
         self.poster_path = ''
+        self.release_air_date = ''
         self.genre_ids =[]
         self.release_air_date = ''
         self.mediaSource = ''
@@ -168,6 +169,8 @@ class TMDbNameParser():
                     genrestr += s['name'] 
         return genrestr
 
+    def genreStr2List(self, genrestr):
+        return genrestr.split(',')
 
     def clearData(self):
         self.ccfcat = ''
@@ -191,7 +194,7 @@ class TMDbNameParser():
         self.origin_country = ''
         self.original_title = ''
         self.overview = ''
-        self.vote_average = ''
+        self.vote_average = 0
         self.production_countries = ''
 
     def parse(self, torname, useTMDb=False, hasIMDbId=None, hasTMDbId=None, exTitle=''):
@@ -249,9 +252,9 @@ class TMDbNameParser():
                         }
                     result = query_media_name(json_data, self.torcpdb_url, self.torcpdb_apikey)
                     if result['success']:
+                        self.saveResult(result)
                         logger.success(f'success: {result["data"]["media_name"]},{result["data"]["tmdb_cat"]}-{result["data"]["tmdb_id"]}')
                         self.ccfcat = transToCCFCat(self.tmdbcat, self.ccfcat)
-
                     break
                 except:
                     attempts += 1
@@ -260,7 +263,41 @@ class TMDbNameParser():
 
 
 
-    
+    def saveResult(self, result):
+        if "data" in result:
+            if "media_name" in result["data"]:
+                self.title = result["data"]["media_name"]
+            if "tmdb_cat" in result["data"]:
+                self.tmdbcat = result["data"]["tmdb_cat"]
+            if "tmdb_id" in result["data"]:
+                self.tmdbid = result["data"]["tmdb_id"]
+            if "imdb_id" in result["data"]:
+                self.imdbid = result["data"]["imdb_id"]
+            if "imdb_val" in result["data"]:
+                self.imdbval = result["data"]["imdb_val"]
+            if "year" in result["data"]:
+                self.year = result["data"]["year"]
+            if "original_language" in result["data"]:
+                self.original_language = result["data"]["original_language"]
+            if "popularity" in result["data"]:
+                self.popularity = result["data"]["popularity"]
+            if "poster_path" in result["data"]:
+                self.poster_path = result["data"]["poster_path"]
+            if "release_air_date" in result["data"]:
+                self.release_air_date = result["data"]["release_air_date"]
+            if "genre_ids" in result["data"]:
+                self.genre_ids = self.genreStr2List(result["data"]["genre_ids"])
+            if "origin_country" in result["data"]:
+                self.origin_country = result["data"]["origin_country"]
+            if "original_title" in result["data"]:
+                self.original_title = result["data"]["original_title"]
+            if "overview" in result["data"]:
+                self.overview = result["data"]["overview"]
+            if "vote_average" in result["data"]:
+                self.vote_average = result["data"]["vote_average"]
+            if "production_countries" in result["data"]:
+                self.production_countries = result["data"]["production_countries"]
+
     # def getIMDbInfo(self, imdb_id):
     #     ia = Cinemagoer()
     #     self.imdbid = imdb_id
