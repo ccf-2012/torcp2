@@ -102,11 +102,14 @@ def query_media_name(json_data, api_url="http://127.0.0.1:5009", torcpdb_apikey=
     Raises:
         requests.RequestException: 当API请求失败时抛出异常
     """
+    if torcpdb_apikey:
+        headers = {
+            'User-Agent': 'python/request:torcp',
+            'X-API-Key': torcpdb_apikey
+        }    
     try:
-        if torcpdb_apikey:
-            json_data['api_key'] = torcpdb_apikey
         response = requests.post(
-            f"{api_url}/api/query",
+            f"{api_url}/api/query", headers=headers,
             json=json_data
         )
         response.raise_for_status()  # 如果响应状态码不是200，抛出异常
@@ -258,7 +261,7 @@ class TMDbNameParser():
                     break
                 except:
                     attempts += 1
-                    logger.warning("TMDb connection failed. Trying %d " % attempts)
+                    logger.warning("TORCPDb connection failed. Trying %d " % attempts)
                     time.sleep(3)
 
 
