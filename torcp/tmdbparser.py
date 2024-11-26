@@ -182,32 +182,19 @@ class TMDbNameParser():
             while attempts < 3:
                 try:
                     json_data = {}
-                    if hasTMDbId:
-                        # TODO: 直接传 TMDb id 还是 tv-12345 这样的组合 str?
-                        cat, tmdbstr = parseTMDbStr(hasTMDbId)
-                        if self.ccfcatHard and (not cat):
-                            cat = self.tmdbcat
-                        if tmdbstr:
-                            json_data = {
-                                "torname": torname,
-                                "tmdbid": hasTMDbId
-                            }
-                    elif hasIMDbId:
-                        json_data = {
-                            "torname": torname,
-                            "imdbid": hasIMDbId
-                        }
-                    elif self.tmdbcat in ['tv', 'movie', 'Other', 'HDTV']:
-                        json_data = {
-                            "torname": torname,
-                            "extitle": exTitle
-                        }
+                    json_data['torname'] = torname
+                    if exTitle:
+                        json_data['extitle'] = exTitle
                     if infolink:
                         json_data['infolink'] = infolink
+                    if hasTMDbId:
+                        json_data['tmdbid'] = hasTMDbId
+                    if hasIMDbId:
+                        json_data['imdbid'] = hasIMDbId
                     result = self.query_torcpdb(json_data)
                     if result['success']:
                         self.saveResult(result)
-                        logger.success(f'success: {result["data"]["media_title"]},{result["data"]["tmdb_cat"]}-{result["data"]["tmdb_id"]}')
+                        logger.success(f'TMDb查得: {result["data"]["tmdb_cat"]}-{result["data"]["tmdb_id"]}, {result["data"]["media_title"]}, {result["data"]["year"]}, {result["data"]["production_countries"]}, {result["data"]["genre_ids"]}')
                         self.ccfcat = transToCCFCat(self.tmdbcat, self.ccfcat)
                     break
                 except:
