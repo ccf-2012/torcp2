@@ -148,7 +148,7 @@ class TMDbNameParser():
         self.vote_average = 0
         self.production_countries = ''
 
-    def parse(self, torname, useTMDb=False, hasIMDbId=None, hasTMDbId=None, exTitle=''):
+    def parse(self, torname, useTMDb=False, hasIMDbId=None, hasTMDbId=None, exTitle='', infolink=''):
         self.clearData()
         tc = TorCategory(torname)
         self.ccfcat, self.group = tc.ccfcat, tc.group
@@ -183,24 +183,27 @@ class TMDbNameParser():
                 try:
                     json_data = {}
                     if hasTMDbId:
+                        # TODO: 直接传 TMDb id 还是 tv-12345 这样的组合 str?
                         cat, tmdbstr = parseTMDbStr(hasTMDbId)
                         if self.ccfcatHard and (not cat):
                             cat = self.tmdbcat
                         if tmdbstr:
                             json_data = {
-                                "seed_name": torname,
-                                "tmdbid": tmdbstr
+                                "torname": torname,
+                                "tmdbid": hasTMDbId
                             }
                     elif hasIMDbId:
                         json_data = {
-                            "seed_name": torname,
+                            "torname": torname,
                             "imdbid": hasIMDbId
                         }
                     elif self.tmdbcat in ['tv', 'movie', 'Other', 'HDTV']:
                         json_data = {
-                            "seed_name": torname,
+                            "torname": torname,
                             "extitle": exTitle
                         }
+                    if infolink:
+                        json_data['infolink'] = infolink
                     result = self.query_torcpdb(json_data)
                     if result['success']:
                         self.saveResult(result)
@@ -213,38 +216,6 @@ class TMDbNameParser():
                     time.sleep(3)
 
     def query_torcpdb(self, json_data):
-        """
-        查询种子名称对应的媒体信息
-        
-        Args:
-            seed_name (str): 需要查询的种子名称
-            api_url (str): API基础URL地址
-        
-        Returns:
-            dict: 查询结果
-                成功返回示例:
-                {
-                    'success': True,
-                    'data': {
-                        'id': 1,
-                        'seed_name': '示例种子名',
-                        'media_name': '正确的媒体名称',
-                        'category': '电影',
-                        'tmdb_id': 12345,
-                        'year': 2024,
-                        'created_at': '2024-01-01 12:00:00'
-                    }
-                }
-                
-                失败返回示例:
-                {
-                    'success': False,
-                    'message': '未找到匹配记录'
-                }
-        
-        Raises:
-            requests.RequestException: 当API请求失败时抛出异常
-        """
         if self.torcpdb_apikey:
             headers = {
                 'User-Agent': 'python/request:torcp',
@@ -264,8 +235,8 @@ class TMDbNameParser():
 
     def saveResult(self, result):
         if "data" in result:
-            if "media_name" in result["data"]:
-                self.title = result["data"]["media_name"]
+            if "media_title" in result["data"]:
+                self.title = result["data"]["media_title"]
             if "tmdb_cat" in result["data"]:
                 self.tmdbcat = result["data"]["tmdb_cat"]
             if "tmdb_id" in result["data"]:
