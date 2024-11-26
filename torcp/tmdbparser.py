@@ -207,7 +207,7 @@ class TMDbNameParser():
                     result = self.query_torcpdb(json_data)
                     if result['success']:
                         self.saveResult(result)
-                        logger.success(f'success: {result["data"]["media_name"]},{result["data"]["tmdb_cat"]}-{result["data"]["tmdb_id"]}')
+                        logger.success(f'success: {result["data"]["media_title"]},{result["data"]["tmdb_cat"]}-{result["data"]["tmdb_id"]}')
                         self.ccfcat = transToCCFCat(self.tmdbcat, self.ccfcat)
                     break
                 except:
