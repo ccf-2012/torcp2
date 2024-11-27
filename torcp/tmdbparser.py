@@ -168,6 +168,8 @@ class TMDbNameParser():
             self.ccfcat = self.ccfcatHard
 
         self.tmdbcat = transFromCCFCat(self.ccfcat)
+        if self.tmdbcat not in ['tv', 'movie']:
+            return
 
         if useTMDb:
             attempts = 0
