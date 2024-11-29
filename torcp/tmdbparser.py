@@ -224,8 +224,10 @@ class TMDbNameParser():
 
     def saveResult(self, result):
         if "data" in result:
-            if "media_title" in result["data"]:
-                self.title = result["data"]["media_title"]
+            if "tmdb_title" in result["data"]:
+                self.title = result["data"]["tmdb_title"]
+            if "tmdb_title" in result["data"]:
+                self.title = result["data"]["tmdb_title"]
             if "tmdb_cat" in result["data"]:
                 self.tmdbcat = result["data"]["tmdb_cat"]
             if "tmdb_id" in result["data"]:
