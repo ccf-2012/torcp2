@@ -735,8 +735,8 @@ class Torcp:
                 continue
 
             p = folderTmdbParser
-            if not (self.ARGS.tmdbid and self.ARGS.single):
-                if not folderTmdbParser.tmdbhard and (folderTmdbParser.tmdbid <= 0) or countMediaFiles > 1:
+            if not ((self.ARGS.tmdbid or self.ARGS.imdbid) and self.ARGS.single):
+                if not folderTmdbParser.tmdbhard and (folderTmdbParser.tmdbid <= 0) or (countMediaFiles > 1):
                     fnok = is0DayName(movieItem)
                     if fnok:
                         pf = TMDbNameParser(self.ARGS.torcpdb_url, self.ARGS.torcpdb_apikey,
