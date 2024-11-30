@@ -105,7 +105,7 @@ class TMDbNameParser():
         if self.genre_ids:
             genre_list = GENRE_LIST_cn
             for x in self.genre_ids:
-                s = next((y for y in genre_list if y['id']==x), None)
+                s = next((y for y in genre_list if str(y['id'])==x), None)
                 if s:
                     ll.append(s['name'])
         return ll
