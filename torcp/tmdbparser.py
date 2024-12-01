@@ -190,7 +190,7 @@ class TMDbNameParser():
                     if infolink:
                         json_data['infolink'] = infolink
                     if hasTMDbId:
-                        json_data['tmdbid'] = hasTMDbId
+                        json_data['tmdbstr'] = hasTMDbId
                     if hasIMDbId:
                         json_data['imdbid'] = hasIMDbId
                     result = self.query_torcpdb(json_data)
