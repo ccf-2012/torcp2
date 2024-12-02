@@ -168,7 +168,8 @@ class TMDbNameParser():
             self.ccfcat = self.ccfcatHard
 
         self.tmdbcat = transFromCCFCat(self.ccfcat)
-        if self.tmdbcat not in ['tv', 'movie']:
+        if (not hasIMDbId) and (not hasTMDbId) and (self.tmdbcat not in ['tv', 'movie']):
+            logger.warning('no IMDb id and not movie/tv')
             return
 
         if useTMDb:
