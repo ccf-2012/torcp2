@@ -61,6 +61,34 @@ def area7dir(arecode):
 
 logger = logging.getLogger(__name__)
 
+def chinese_to_number(chinese_str):
+    # 中文数字映射字典
+    chinese_numbers = {
+        '一': 1,
+        '二': 2,
+        '三': 3,
+        '四': 4,
+        '五': 5,
+        '六': 6,
+        '七': 7,
+        '八': 8,
+        '九': 9
+    }
+    
+    result = ''
+    
+    # 遍历输入的中文字符串
+    for char in chinese_str:
+        # 如果是中文数字，则添加对应的阿拉伯数字
+        if char in chinese_numbers:
+            result += str(chinese_numbers[char])
+        else:
+            # 如果遇到非中文数字字符，直接跳过或可以处理错误
+            pass
+    
+    return result
+
+
 
 class Torcp:
     def __init__(self):
@@ -240,6 +268,7 @@ class Torcp:
             else:
                 self.hdlinkCopy(fromLoc, toLocPath, toLocFile)
 
+
     def getSeasonFromFolderName(self, folderName, failDir=''):
         m1 = re.search(r'(\bS\d+(-S\d+)?|第(\d+)季)', folderName, flags=re.A | re.I)
         if m1:
@@ -247,6 +276,9 @@ class Torcp:
                 return 'S' + m1.group(3)
             else:
                 return m1.group(1)
+        elif m2 := re.search(r'第(\w+)季)', folderName, flags=re.A | re.I):
+            sstr = chinese_to_number(m2.group(1))
+            return 'S'+sstr.zfill(2)
         else:
             return folderName
 
