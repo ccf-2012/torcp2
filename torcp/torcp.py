@@ -276,7 +276,7 @@ class Torcp:
                 return 'S' + m1.group(3)
             else:
                 return m1.group(1)
-        elif m2 := re.search(r'第(\w+)季)', folderName, flags=re.A | re.I):
+        elif m2 := re.search(r'第(\w+)季', folderName, flags=re.A | re.I):
             sstr = chinese_to_number(m2.group(1))
             return 'S'+sstr.zfill(2)
         else:
