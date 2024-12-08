@@ -294,8 +294,11 @@ class TorTitle:
                 sstr = sstr[:syspan[0]]
 
         if not skipcut:
-            sstr = cutspan(sstr, seasonspan[0], seasonspan[1])
+            # sstr = cutspan(sstr, seasonspan[0], seasonspan[1])
             sstr = cutspan(sstr, yearspan[0], yearspan[1])
+            sypos = seasonspan[0] if seasonspan[0] < yearspan[0] else yearspan[0]
+            if sypos > 0:
+                sstr = sstr[0:sypos].strip()
         if sstr:
             failsafeTitle = sstr
         sstr = re.sub(r'\b(Theatrical|Extended)\s+Version', '', sstr, flags=re.I)
