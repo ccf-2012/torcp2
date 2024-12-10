@@ -89,6 +89,8 @@ class TMDbNameParser():
         self.mediaSource = ''
         self.videoCodec = ''
         self.audioCodec = ''
+        self.imdbid = ''
+        self.imdbval = 0.0
 
         self.torcpdb_url = torcpdb_url
         self.torcpdb_apikey = torcpdb_apikey
