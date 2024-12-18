@@ -201,6 +201,9 @@ class TMDbNameParser():
                         self.saveResult(result)
                         logger.success(f'TMDb查得: {result["data"]["tmdb_cat"]}-{result["data"]["tmdb_id"]}, {result["data"]["tmdb_title"]}, {result["data"]["year"]}, {result["data"]["production_countries"]}, {result["data"]["genre_ids"]}')
                         self.ccfcat = transToCCFCat(self.tmdbcat, self.ccfcat)
+                    else:
+                        logger.warning(f'TMDb 没有结果: {torname}, {exTitle}, {hasIMDbId}, {infolink}')
+
                     break
                 except:
                     attempts += 1
