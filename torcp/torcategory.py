@@ -138,8 +138,8 @@ class TorCategory:
             self.setCategory('TV')
         elif re.search(r'\W[ES]\d+\W|EP\d+\W|\d+季|第\w{1,3}季\W', torName, re.A | re.I):
             self.setCategory('TV')
-        elif re.search(r'\bHDTV\b', torName):
-            self.setCategory('HDTV')
+        # elif re.search(r'\bHDTV\b', torName):
+        #     self.setCategory('HDTV')
         elif re.search(r'(Complete.+Web-?dl|Full.Season|The[\s\.]*(Complete\w*|Drama\w*|Animate\w*)?[\s\.]*Series|\d+集)', torName, re.A | re.I):
             self.setCategory('TV')
         else:
@@ -194,13 +194,13 @@ class TorCategory:
             return ''
 
     def getSource(self, torName):
-        match = re.search(r'\b(Blu[\-\. ]?Ray|WEB[\-\. ]?DL|WEB|WEBRip|^BD([-. ]\d)*|BD$)\b', torName, re.A | re.I)
+        match = re.search(r'\b(Blu[\-\. ]?Ray|WEB[\-\. ]?DL|WEB|WEBRip|^BD([-. ]\d)*|\d+[. ](BD|BDRip)|BD[. ].Audio|MiniSD|MiniFHD)\b', torName, re.A | re.I)
         if match:
             # mediaSource = match.group(0).strip().lower()
-            if re.search(r'(\bBlu|\bBD)', match.group(0), flags=re.A | re.I):
-                return 'BLURAY'
-            else:
+            if re.search(r'WEB', match.group(0), flags=re.A | re.I):
                 return 'WEBDL'
+            else:
+                return 'BLURAY'
         else:
             return ''
 
@@ -219,6 +219,8 @@ class TorCategory:
                 #     self.setCategory('Movie4K')
                 # else:
                 #     self.setCategory('MovieEncode')
+                self.setCategory('MovieEncode')
+            elif re.search(r'\bMiniSD|MiniFHD\b', torName, re.I):
                 self.setCategory('MovieEncode')
             else:
                 if self.resolution == '2160p':
