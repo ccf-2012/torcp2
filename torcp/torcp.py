@@ -997,7 +997,7 @@ class Torcp:
                     self.processMovieDir(mediaSrc, cat, destFolderName, folderTmdbParser=p)
                 else:
                     self.targetCopy(mediaSrc, cat)
-                    self.targetDirHook(os.path.join(cat, itemName), tmdbidstr='', tmdbcat='notfound', tmdbtitle=itemName, tmdbobj=None)
+                    self.targetDirHook(os.path.join(cat, itemName), tmdbidstr='', tmdbcat='notfound', tmdbtitle=p.title, tmdbobj=None)
 
             elif cat in ['Audio']:
                 self.targetCopy(mediaSrc, cat)
