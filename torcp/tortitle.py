@@ -345,7 +345,16 @@ class TorTitle:
     def parseTorNameMore(self, torName):
         mediaSource, video, audio = '', '', ''
         if m := re.search(r"(?<=(1080p|2160p)\s)(((\w+)\s+)?WEB(-DL)?)|\bWEB(-DL)?\b|\bHDTV\b|((UHD )?(BluRay|Blu-ray))", torName, re.I):
-            mediaSource = m[0].strip()
+            m0 = m[0].strip()
+            if re.search(r'WEB[-]?DL', m0, re.I):
+                mediaSource = 'webdl'
+            elif re.search(r'BLURAY|BLU-RAY', m0, re.I):
+                if re.search(r'x26[45]', torName, re.I):
+                    mediaSource = 'encode'
+                else:
+                    mediaSource = 'bluray'
+            else:
+                mediaSource = m0
         if m := re.search(r"AVC|HEVC(\s(DV|HDR))?|H\.?26[456](\s(HDR|DV))?|x26[45]\s?(10bit)?(HDR)?|DoVi (HDR(10)?)? (HEVC)?", torName, re.I):
             video = m[0].strip()
         if m := re.search(r"DTS-HD MA \d.\d|LPCM\s?\d.\d|TrueHD\s?\d\.\d( Atmos)?|DDP[\s\.]*\d\.\d( Atmos)?|(AAC|FLAC)(\s*\d\.\d)?( Atmos)?|DTS(?!-\w+)|DD\+? \d\.\d", torName, re.I):
