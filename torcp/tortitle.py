@@ -252,12 +252,13 @@ class TorTitle:
 
         sstr = re.sub(r'\W?(IMAX|Extended Cut|Unrated Cut|\d+CD|APE整轨)\b.*$', '', sstr, flags=re.I)
         sstr = re.sub(r'[\[\(](BD\d+|WAV\d*|(CD\-)?FLAC|Live|DSD\s?\d*)\b.*$', '', sstr, flags=re.I)
-        sstr = re.sub(r'^\W?(BDMV|\BDRemux|\bCCTV-4K|\bCCTV\d(HD|K)?|BD\-?\d*|[A-Z]{1,5}TV)\W*', '', sstr, flags=re.I)
+        sstr = re.sub(r'^\W?(BDMV|\BDRemux|\bCCTV-4K|\bCCTV\d+(HD|K)?|BD\-?\d*|[A-Z]{1,5}TV)\W*', '', sstr, flags=re.I)
 
         sstr = re.sub(r'\{[^\}]*\}.*$', '', sstr, flags=re.I)
         sstr = re.sub(r'([\s\.-](\d+)?CD[\.-]WEB|[\s\.-](\d+)?CD[\.-]FLAC|[\s\.-][\[\(\{]FLAC[\]\)\}]).*$', '', sstr, flags=re.I)
         sstr = re.sub(r'\bFLAC\b.*$', '', sstr, flags=re.I)
         sstr = re.sub(r'^[\[\(]\d+[^\)\]]*[\)\]]', '', sstr, flags=re.I)
+        sstr = re.sub(r'^Jade\b', '', sstr, flags=re.I)
         sstr = re.sub(r'^\(\w+\)', '', sstr, flags=re.I)
 
         sstr = re.sub(r'^\W?CC_?\b', '', sstr, flags=re.I)
