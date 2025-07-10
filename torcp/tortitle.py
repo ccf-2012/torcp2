@@ -352,6 +352,8 @@ class TorTitle:
             elif re.search(r'BLURAY|BLU-RAY', m0, re.I):
                 if re.search(r'x26[45]', torName, re.I):
                     mediaSource = 'encode'
+                elif re.search(r'remux', torName, re.I):
+                    mediaSource = 'remux'
                 else:
                     mediaSource = 'bluray'
             else:
