@@ -28,10 +28,10 @@ import xml.etree.ElementTree as ET
 
 def area5dir(arecode):
     AREADICT = {
-        'useu' : ['GB', 'FR', 'DE', 'IT', 'RU', 'DK', 'NO', 'IS', 'SE', 'FI', 'IE', 'ES', 'PT', 'NL', 'BE', 'AT', 
-            'CH', 'UA', 'BY', 'PL', 'CZ', 'GR', 'TR', 'BG', 'RO', 'LT', 'HU', 'LU', 'MC', 'LI', 'EE', 'LV', 
-            'HR', 'RS', 'SK', 'MD', 'SI', 'AL', 'MK', 'AZ', 'GE', 'ME', 'BA', 'CA', 'US', 'MX', 'GT', 'BZ', 
-            'SV', 'HN', 'NI', 'CR', 'PA', 'BS', 'CU', 'JM', 'HT', 'DO', 'KN', 'AG', 'DM', 'LC', 'VC', 'BB', 
+        'useu' : ['GB', 'FR', 'DE', 'IT', 'RU', 'DK', 'NO', 'IS', 'SE', 'FI', 'IE', 'ES', 'PT', 'NL', 'BE', 'AT',
+            'CH', 'UA', 'BY', 'PL', 'CZ', 'GR', 'TR', 'BG', 'RO', 'LT', 'HU', 'LU', 'MC', 'LI', 'EE', 'LV',
+            'HR', 'RS', 'SK', 'MD', 'SI', 'AL', 'MK', 'AZ', 'GE', 'ME', 'BA', 'CA', 'US', 'MX', 'GT', 'BZ',
+            'SV', 'HN', 'NI', 'CR', 'PA', 'BS', 'CU', 'JM', 'HT', 'DO', 'KN', 'AG', 'DM', 'LC', 'VC', 'BB',
             'GD', 'TT', 'CO', 'EC', 'VE', 'GF', 'SR', 'PE', 'BO', 'PY', 'BR', 'CL', 'AR', 'UY'],
         # 'jpkr' : ['JP', 'KR', 'KO', 'JA'],
         'jp' : ['JP', 'JA'],
@@ -44,10 +44,10 @@ def area5dir(arecode):
 def area7dir(arecode):
     AREADICT = {
         'us' : ['US'],
-        'occident' : ['GB', 'FR', 'DE', 'IT', 'RU', 'DK', 'NO', 'IS', 'SE', 'FI', 'IE', 'ES', 'PT', 'NL', 'BE', 'AT', 
-            'CH', 'UA', 'BY', 'PL', 'CZ', 'GR', 'TR', 'BG', 'RO', 'LT', 'HU', 'LU', 'MC', 'LI', 'EE', 'LV', 
-            'HR', 'RS', 'SK', 'MD', 'SI', 'AL', 'MK', 'AZ', 'GE', 'ME', 'BA', 'CA', 'MX', 'GT', 'BZ', 
-            'SV', 'HN', 'NI', 'CR', 'PA', 'BS', 'CU', 'JM', 'HT', 'DO', 'KN', 'AG', 'DM', 'LC', 'VC', 'BB', 
+        'occident' : ['GB', 'FR', 'DE', 'IT', 'RU', 'DK', 'NO', 'IS', 'SE', 'FI', 'IE', 'ES', 'PT', 'NL', 'BE', 'AT',
+            'CH', 'UA', 'BY', 'PL', 'CZ', 'GR', 'TR', 'BG', 'RO', 'LT', 'HU', 'LU', 'MC', 'LI', 'EE', 'LV',
+            'HR', 'RS', 'SK', 'MD', 'SI', 'AL', 'MK', 'AZ', 'GE', 'ME', 'BA', 'CA', 'MX', 'GT', 'BZ',
+            'SV', 'HN', 'NI', 'CR', 'PA', 'BS', 'CU', 'JM', 'HT', 'DO', 'KN', 'AG', 'DM', 'LC', 'VC', 'BB',
             'GD', 'TT', 'CO', 'EC', 'VE', 'GF', 'SR', 'PE', 'BO', 'PY', 'BR', 'CL', 'AR', 'UY'],
         # 'jpkr' : ['JP', 'KR', 'KO', 'JA'],
         'jp' : ['JP', 'JA'],
@@ -91,7 +91,9 @@ def chinese_to_number(chinese_str):
 
 
 class Torcp:
+    """A class to handle the copying and linking of media files."""
     def __init__(self):
+        """Initializes the Torcp object."""
         self.CUR_MEDIA_NAME = ''
         self.KEEPEXTALL = False
         self.KEEPEXTS = ['.mkv', '.mp4', '.ts', '.m2ts', '.mov', '.strm']
@@ -283,9 +285,9 @@ class Torcp:
             return folderName
 
     def fixNtName(self, file_path):
-        # file_path = re.sub(r'(\:|\?|<|>|\*|\\|\")', ' ', file_path)
+        # file_path = re.sub(r'(\:\|\?|<|>|\*|\\|\"|")', ' ', file_path)
         if platform.system() == 'Windows':
-            file_path = re.sub(r'(\:|\?|<|>|\*|\\|/|\")', ' ', file_path)
+            file_path = re.sub(r'(\:\|\?|<|>|\*|\\|/|\"|")', ' ', file_path)
         else:
             file_path = re.sub(r'/', ' ', file_path)
         return file_path
@@ -579,7 +581,7 @@ class Torcp:
         if m1:
             sstr = srcOriginName[m1.span(1)[0]:]
         else:
-            m2 = re.search( r'([\(\[]?((19\d{2}\b|20\d{2})(-19\d{2}|-20\d{2})?)[\)\]]?)(?!.*\b\d{4}\b.*)', srcOriginName, flags=re.A | re.I)
+            m2 = re.search( r'([\(\[]?((19\d{2}\b|20\d{2})(-19\d{2}|-20\d{2})?)[\) \]]?)(?!.*\b\d{4}\b.*)', srcOriginName, flags=re.A | re.I)
             if m2:
                 sstr = sstr[m2.span(1)[1]:].strip()
         sstr = re.sub(r'^[. ]*', '', sstr)
@@ -597,7 +599,7 @@ class Torcp:
         # filename, file_ext = os.path.splitext(mediaSrc)
         ch1 = ' - '
         tmdbTail = self.genTMDbTail(nameParser)
-        medianame = movieName + ((' (' + year + ')' ) if year else '') + tmdbTail + ch1 + originName
+        medianame = movieName + ((' (' + year + ')') if year else '') + tmdbTail + ch1 + originName
         return medianame.strip()
 
     def genMovieTMDbOriginName(self, mediaSrc, movieName, year, nameParser=None):
@@ -605,7 +607,7 @@ class Torcp:
         # filename, file_ext = os.path.splitext(mediaSrc)
         ch1 = ' - '
         tmdbTail = self.genTMDbTail(nameParser)
-        medianame = movieName + ((' (' + year + ')' ) if year else '') + tmdbTail + ch1 + originName
+        medianame = movieName + ((' (' + year + ')') if year else '') + tmdbTail + ch1 + originName
         return medianame.strip()
 
 
@@ -615,7 +617,8 @@ class Torcp:
         ch2 = '_' if (resolution and group) else ''
         tmdbTail = self.genTMDbTail(nameParser)
         medianame = movieName + ((' (' + year + ')' ) if year else '') + tmdbTail + ch1 + (
-            resolution if resolution else '') + ch2 + (group
+            resolution if resolution else '') + ch2 + (
+                                                    group
                                                     if group else '') + file_ext
         return medianame.strip()
 
@@ -804,16 +807,17 @@ class Torcp:
                 if self.ARGS.origin_name:
                     # newMovieName = os.path.basename(movieItem)
                     yearstr = str(p.year) if p.year > 0 else ''
-                    newMovieName = self.genMovieOriginName(movieItem, p.title, yearstr,
-                                                    nameParser=p)
+                    newMovieName = self.genMovieOriginName(movieItem, p.title,
+                                                    yearstr, nameParser=p)
                 elif self.ARGS.tmdb_origin_name:
                     yearstr = str(p.year) if p.year > 0 else ''
-                    newMovieName = self.genMovieTMDbOriginName(movieItem, p.title, yearstr,
-                                                    nameParser=p)
+                    newMovieName = self.genMovieTMDbOriginName(movieItem, p.title,
+                                                    yearstr, nameParser=p)
                 else:
                     yearstr = str(p.year) if p.year > 0 else ''
-                    newMovieName = self.genMovieResGroup(movieItem, p.title, yearstr,
-                                                    p.resolution, p.group, nameParser=p)
+                    newMovieName = self.genMovieResGroup(movieItem, p.title,
+                                                    yearstr, p.resolution,
+                                                    p.group, nameParser=p)
                 self.targetCopy(mediaSrcItem, destCatFolderName, newMovieName)
                 self.mkMediaNfo(destCatFolderName, newMovieName, p)
                 self.targetDirHook(destCatFolderName, tmdbidstr=str(p.tmdbid), tmdbcat=p.tmdbcat, tmdbtitle=p.title, tmdbobj=p)
@@ -1237,6 +1241,7 @@ class Torcp:
             self.processOneDirItem(parentFolder, item, imdbidstr=folderImdb, tmdbidstr=folderTmdb)
 
     def main(self, argv=None, exportObject=None):
+        """The main function of the script."""
         self.EXPORT_OBJ = exportObject
         self.loadArgs(argv)
         cpLocation = self.ARGS.MEDIA_DIR

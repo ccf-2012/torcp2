@@ -67,7 +67,9 @@ def parseTMDbStr(tmdbstr):
         return '', ''
 
 class TMDbNameParser():
+    """A class to parse torrent names and query The Movie Database (TMDb) for additional information."""
     def __init__(self, torcpdb_url, torcpdb_apikey, ccfcat_hard=None):
+        """Initializes the TMDbNameParser object."""
         self.ccfcatHard = ccfcat_hard
         self.ccfcat = ''
         self.title = ''
@@ -151,6 +153,7 @@ class TMDbNameParser():
         self.production_countries = ''
 
     def parse(self, torname, useTMDb=False, hasIMDbId=None, hasTMDbId=None, exTitle='', infolink=''):
+        """Parses a torrent name and queries TMDb for more information."""
         self.clearData()
         tc = TorCategory(torname)
         self.ccfcat, self.group = tc.ccfcat, tc.group
@@ -299,4 +302,3 @@ class TMDbNameParser():
             tmdbid = tryint(m[2])
             return tmdbid
         return -1
-

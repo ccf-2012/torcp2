@@ -24,6 +24,7 @@ class CategoryItem:
 
 
 class TorCategory:
+    """A class to categorize torrents based on their names."""
     # def __init__(self):
     # 有些组生产 TV Series，但是在种子名上不显示 S01 这些
     TV_GROUPS = ['CMCTV', 'FLTTH']
@@ -67,6 +68,7 @@ class TorCategory:
     CategorySummary = []
 
     def __init__(self, torName):
+        """Initializes the TorCategory object and guesses the category of the torrent."""
         self.ccfcat, self.group = self.guessByName(torName)
 
 
