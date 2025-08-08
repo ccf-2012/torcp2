@@ -196,6 +196,7 @@ class TMDbNameParser():
                         json_data['tmdbstr'] = hasTMDbId
                     if hasIMDbId:
                         json_data['imdbid'] = hasIMDbId
+                    logger.info(f'torname: {torname}, tmdbstr: {hasTMDbId}, imdbid: {hasIMDbId}, exTitle: {exTitle}, infolink: {infolink}')
                     result = self.query_torcpdb(json_data)
                     if result['success']:
                         self.saveResult(result)
