@@ -1,6 +1,6 @@
 # torcp2
 * since 2024.11.24 启动 torcp2 以将查询 TMDb/IMDb 等操作分离出，以对 TORDB 作 api 查询方式实现
-
+* 与 torcp 差别在于，查询是通过 torcpdb 完成，在命令行中需要给 `-torcpdb-url` 和 `--torcpdb-apikey` 信息
 ---------
 
 [English version](README_en.md)
@@ -17,6 +17,7 @@
 * [刮削攻略](刮削攻略.md)
 
 ## 2 Last Update
+* 2025.8.7 支持 `.strm` 
 * 2024.11.21 查 IMDb 由 episode 获取 series 的 IMDb，再查 TMDb
 * 2024.10.23 `--add-year-dir` 在媒体名称目录之上，加一层年份目录
 * 2023.5.24 对于包括 tmdbid=12345/tmdb-12345 的文件夹，都以目录中所包含的标识，对目录下的各文件/目录进行刮削
@@ -142,183 +143,31 @@ options:
                         specify genres with area subdir, seperated with comma
 ```
 
-
-## 5 基本使用
-
-* 将一个目录中所有影视文件和目录，硬链到另一个目录，其间会按目录名/文件名猜测分类，并挑出 `.mkv` 和 `.mp4`:
-```sh 
-torcp /home/ccf2012/Downloads/  -d /home/ccf2012/emby/ 
-```
-
-* 电影和剧集的处理，是不一样的，如果你确认一个目录是电影或剧集，可以使用`--movie` 和 `--tv` 指定:
-```sh
-torcp /home/ccf2012/Downloads/RSSMovie/ -d /home/ccf2012/emby/ --movie
-```
-
-* 如果想单独处理单个目录，可使用 `-s` 指定，例如:
-```sh
-torcp /home/ccf2012/Downloads/权力的游戏.第1-8季.Game.Of.Thrones.S01-S08.1080p.Blu-Ray.AC3.x265.10bit-Yumi -d /home/ccf2012/emby/ -s --tv
-```
-
 ---
 
-## 6 `--tmdb-api-key` TMDb 查询
-* 通过The Movie Database (TMDb) API 查询，得到确切的tmdbid, 确保生成的文件夹可被刮削
-* 可选 `--tmdb-lang` 参数，默认是 `zh-CN`
-* 查询不到的文件，将会被 `链` 或 `移` 到目标目录下 `TMDbNotFound` 目录中
-
+## 5 通过 torcpdb 进行 TMDb 查询
+* 对一个目录进行遍历查询，完成硬链
 ```sh
-torcp /home/test/ -d /home/test/result3/ --tmdb-api-key='your TMDb api key'
+python tp.py  /home/test/ -d /home/test/result3/ --torcpdb-url 'http://192.168.5.10:5009' --torcpdb-apikey  something 
 ```
 
-* 组合 `--move-run` 的例子
+* 对单个文件进行硬链的例子
 ```sh
-torcp /home/test/ -d /home/test/result2/ --tmdb-api-key='your TMDb api key' --plex-bracket --move-run  --dryrun
-```
-
-### 6.2 `--lang` 按语言分类
-* 如果查出了TMDb id，那么可以将媒体按语言分到不同目录存储
-* `--lang` 后面以逗号分隔写所需要分出来的语言，其它的归到 `others` 
-* 中文语言为 `cn`，日语为 `ja`，韩语为 `ko`
-* 如果写 `--lang all` 则所有语言都被分类
-  
-```sh
-torcp /home/test/ -d /home/test/result3/ --tmdb-api-key='your TMDb api key' --lang cn,ja,ko
+python tp.py "~/test/Is.S01.2018.2019.1080p.NF.WEB-DL.DDP2.0.x264-quypham@TTG/"  -d '~/fuse/test2' --torcpdb-url 'http://192.168.5.10:5009' --torcpdb-apikey  something --emby-bracket --tmdb-origin-name --sep-area5  --tv -s --tmdbid 104486
 ```
 
 ----
 
-## 7 `--move-run` 直接改名和移动 
-* 不作硬链，直接进行move和改名操作，用于对已经放在gd中的文件进行整理
-* `-d` 指定要搬移的目标位置，请自己把握不跨区 
-* 加了一个`--sleep`参数，可以每次操作搬移一个文件后暂停 `SLEEP` 秒，此参数仅在 `--move-run` 时有效
-* 由于这样的操作不可逆，请一定先作 `--dry-run` 确认后才执行
+## 6 媒体文件名生成方案
 
-
-```sh
-torcp /home/test/ -d /home/test/result5/ --move-run --dryrun
-```
-
-----
-
-## 8 `--extract-bdmv` 和 `--full-bdmv`，BDMV的处理
-* 特别说一下对BDMV的处理：
-1. 如果什么参数都不加，在碰到含有 `BDMV` 目录和 `.iso` 文件时，将会跳过。
-```sh
-torcp /volume1/video/emby/test -d /volume1/video/emby/testdir
-```
-2. `--extract-bdmv` 参数，可能最适合 Emby 或 Kodi 的用家，它将会从 `BDMV` 目录中挑出最大的几个 `.m2ts` 文件硬链出来，对于 movie/tv 都行。见[下面的例子](#--extract-bdmv-%E7%9A%84%E4%BE%8B%E5%AD%90)
-> with `iso` files copy to sepereate dir
-```sh
-torcp /volume1/video/emby/test -d /volume1/video/emby/testdir --extract-bdmv
-```
-3. `--full-bdmv` 参数。使用这个参数会将整个 BDMV 文件夹和  `.iso` 文件都硬链出来，对于使用碟机播放的用家，就会有用。
-```sh
-torcp /volume1/video/emby/test -d /volume1/video/emby/testdir --full-bdmv
-```
-
-#### 8.1 `--extract-bdmv` 的例子
-* 命令:
-```sh
-torcp /share/CACHEDEV1_DATA/Video/QB/TV  -d /share/CACHEDEV1_DATA/Video/emby/  --extract-bdmv 
-```
-* 原目录:
-```
-[/share/CACHEDEV1_DATA/Video/QB/TV/Civilisations.S01.COMPLETE.BLURAY-VEXHD] # tree . -h -A -P *.m2ts
-.
-├── [4.0K]  CIVILISATIONS_D1
-│   └── [4.0K]  BDMV
-│       ├── [4.0K]  BACKUP
-│       │   ├── [4.0K]  CLIPINF
-│       │   └── [4.0K]  PLAYLIST
-│       ├── [4.0K]  CLIPINF
-│       ├── [4.0K]  META
-│       │   └── [4.0K]  DL
-│       ├── [4.0K]  PLAYLIST
-│       └── [4.0K]  STREAM
-│           ├── [ 14G]  00002.m2ts
-│           ├── [ 14G]  00003.m2ts
-│           ├── [ 14G]  00004.m2ts
-│           ├── [1.1M]  00005.m2ts
-│           ├── [ 12M]  00006.m2ts
-│           ├── [ 94M]  00007.m2ts
-│           ├── [ 94M]  00008.m2ts
-│           ├── [1.9M]  00009.m2ts
-│           ├── [1.5M]  00010.m2ts
-│           └── [126K]  00011.m2ts
-├── [4.0K]  CIVILISATIONS_D2
-│   └── [4.0K]  BDMV
-│       ├── [4.0K]  BACKUP
-│       │   ├── [4.0K]  CLIPINF
-│       │   └── [4.0K]  PLAYLIST
-│       ├── [4.0K]  CLIPINF
-│       ├── [4.0K]  META
-│       │   └── [4.0K]  DL
-│       ├── [4.0K]  PLAYLIST
-│       └── [4.0K]  STREAM
-│           ├── [ 14G]  00002.m2ts
-│           ├── [ 14G]  00003.m2ts
-│           ├── [ 14G]  00004.m2ts
-│           ├── [1.1M]  00005.m2ts
-│           ├── [ 12M]  00006.m2ts
-│           ├── [ 94M]  00007.m2ts
-│           ├── [ 94M]  00008.m2ts
-│           ├── [1.9M]  00009.m2ts
-│           ├── [1.5M]  00010.m2ts
-│           └── [126K]  00011.m2ts
-└── [4.0K]  CIVILISATIONS_D3
-    └── [4.0K]  BDMV
-        ├── [4.0K]  BACKUP
-        │   ├── [4.0K]  CLIPINF
-        │   └── [4.0K]  PLAYLIST
-        ├── [4.0K]  CLIPINF
-        ├── [4.0K]  META
-        │   └── [4.0K]  DL
-        ├── [4.0K]  PLAYLIST
-        └── [4.0K]  STREAM
-            ├── [ 14G]  00002.m2ts
-            ├── [ 14G]  00003.m2ts
-            ├── [ 14G]  00004.m2ts
-            ├── [1.1M]  00005.m2ts
-            ├── [ 12M]  00006.m2ts
-            ├── [ 94M]  00007.m2ts
-            ├── [ 94M]  00008.m2ts
-            ├── [1.9M]  00009.m2ts
-            ├── [1.5M]  00010.m2ts
-            └── [126K]  00011.m2ts
-
-```
-* 执行后:
-```
-[/share/CACHEDEV1_DATA/Video/emby/BDMV_TV/Civilisations] # tree . -h -A
-.
-├── [4.0K]  CIVILISATIONS_D1
-│   ├── [ 14G]  CIVILISATIONS_D1\ -\ 00002.m2ts
-│   ├── [ 14G]  CIVILISATIONS_D1\ -\ 00003.m2ts
-│   └── [ 14G]  CIVILISATIONS_D1\ -\ 00004.m2ts
-├── [4.0K]  CIVILISATIONS_D2
-│   ├── [ 14G]  CIVILISATIONS_D2\ -\ 00002.m2ts
-│   ├── [ 14G]  CIVILISATIONS_D2\ -\ 00003.m2ts
-│   └── [ 14G]  CIVILISATIONS_D2\ -\ 00004.m2ts
-└── [4.0K]  CIVILISATIONS_D3
-    ├── [ 14G]  CIVILISATIONS_D3\ -\ 00002.m2ts
-    ├── [ 14G]  CIVILISATIONS_D3\ -\ 00003.m2ts
-    └── [ 14G]  CIVILISATIONS_D3\ -\ 00004.m2ts
-
-```
-
-----
-
-## 9 媒体文件名生成方案
-
-### 9.1 `--origin-name` 与 `--tmdb-origin-name`
+### 6.1 `--origin-name` 与 `--tmdb-origin-name`
 * 对于IMDb搜索到的媒体资源，目录结构将按Emby/Plex所约定的规范进行组织，目录内的文件名，有3种可能的方式：
 1. 默认的：刮削名 (年份) - 分辨率_组名.mkv
 2. `--origin-name`：TV直接使用 原文件名, Movie：刮削名 (年份) - 原文件名
 3. `--tmdb-origin-name`：刮削名 (年份) - 原文件名
 
 
-### 9.2 `--emby-bracket`， --plex-bracket`
+### 6.2 `--emby-bracket`， --plex-bracket`
 * 可以使用 `--emby-bracket` 选项在 「刮削名 (年份)」之后加上如「[tmdbid=509635]」这样的emby bracket，以便Emby在刮削时直接辨认使用；
 * 对于plex，可以使用 `--plex-bracket` 生成如 「{tmdb-509635}」这样的后缀；
 * 这两个选项在使用  `--tmdb-origin-name` 时也是生效的
@@ -326,7 +175,7 @@ torcp /share/CACHEDEV1_DATA/Video/QB/TV  -d /share/CACHEDEV1_DATA/Video/emby/  -
 
 * 比如：
 ```sh
-python3 tp.py ../test -d ../test/result  --tmdb-api-key 'your TMDb api key'  --tmdb-origin-name  --emby-bracket
+python3 tp.py ../test -d ../test/result --torcpdb-url 'http://192.168.5.10:5009' --torcpdb-apikey something --emby-bracket --tmdb-origin-name  --emby-bracket
 ```
 * 结果如下：
 ```
@@ -344,7 +193,7 @@ python3 tp.py ../test -d ../test/result  --tmdb-api-key 'your TMDb api key'  --t
 ```
 * 而如果不使用 `--tmdb-origin-name `
 ```sh
-python3 tp.py ../test -d ../test/result  --tmdb-api-key 'your TMDb api key'  --emby-bracket 
+python3 tp.py ../test -d ../test/result  --torcpdb-url 'http://192.168.5.10:5009' --torcpdb-apikey something  --emby-bracket 
 ```
 * 得到结果如下：
 ```
@@ -363,10 +212,10 @@ python3 tp.py ../test -d ../test/result  --tmdb-api-key 'your TMDb api key'  --e
 
 -----
 
-## 10 传入IMDb信息
+## 7 传入IMDb信息
 * 在大部分情况下，有IMDb信息，可以确定地查出TMDb信息，有两种类型的方法：
 
-### 10.1 建一个包含IMDb id的目录
+### 7.1 建一个包含IMDb id的目录
 * 下载资源时多建一层父目录，包含IMDb信息： 即用户可以在rss站时，添加种子时就建一个以 `站点-id-IMDb` 为名的目录，作为下载资源的父目录，则torcp将以此IMDb id作为信息，对下层目录作为资源进行刮削。（by boomPa), 如：
 ```
 audies_movie-1234-tt123456\
@@ -380,22 +229,14 @@ audies_movie-1234-tt123456\
 
 
 
-### 10.2 以`--imdbid`参数指定 IMDb id
+### 7.2 以`--imdbid`参数指定 IMDb id
 * 在qb中添加种子时，加一个IMDb tag。这可以使用 [torcc](https://github.com/ccf-2012/torcc) 或 [torfilter](https://github.com/ccf-2012/torfilter) 实现
 * 在下载完成时，将此 IMDb tag 以`--imdbid` 参数传给torcp。
 * 详情参考[利用 qBittorrent 的完成后自动执行脚本功能实现入库](qb自动入库.md)
 
 ----
-## 11 DeleteEmptyFolders.py 清除空目录
-* 在作了上面 `--move-run` 操作后，原目录将会剩留大量 空的，或仅包含 `.jpg`, `.nfo` 这类小文件的目录
-* 除了默认的 `.mkv`, `.mp4`, `.ts`, `.iso` 之外，使用与 `torcp.py` 相同的 `--keep-ext` 来表示那些已经 **不再包含这些扩展名文件** 的目录，将被删除
-* 使用 `--dryrun` 先看下将会发生什么
 
-```sh
-torcp-clean /home/test/  -e srt,ass --dryrun
-```
-
-## 12 以代码调用torcp进行二次开发
+## 8 以代码调用torcp进行二次开发
 * torcp 入口定义为：
 ```py  
 torcp.main(argv=None, exportObject=None)
@@ -421,7 +262,7 @@ if __name__ == '__main__':
 ```
 
 
-## 13 类型，语言，地区分目录
+## 9 类型，语言，地区分目录
 * 地区 `--sep-area` 与 语言 `--lang` 只选其一，`--lang` 优先（有lang了就不看area）
 * 如果地区没有取到，则会取语言代码；语言是小写，地区是大写；
 * 类型 `--genre` 独立在 地区/语言之外，如果指定了类型，只有没指定的部分会分 地区/地区
@@ -448,6 +289,7 @@ War Western
 Action & Adventure Animation Comedy Crime Documentary Drama Family
 Kids Mystery News Reality Sci-Fi & Fantasy Soap Talk War & Politics
 ```
+
 
 ---
 ## Acknowledgement 
