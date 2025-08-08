@@ -315,7 +315,7 @@ class TorTitle:
             cntitle = sstr
             # m = re.search(r'^.*[^\x00-\x7F](S\d+|\s|\.||||||||)*\b(?=[a-zA-Z])', sstr, flags=re.A)
             # m = re.search( r'^.*[^a-zA-Z_\- &0-9](S\d+|\s|\.||)*\b(?=[A-Z])', titlestr, flags=re.A)
-            m = re.search(r'^.*[一-鿆\?？]\s*(S\d+(-S\d+)?|\([^(\]*\)|\d+-\d+)?[： ]*(?=[0-9a-zA-Z])',
+            m = re.search(r'^.*[一-鿆\?？]\s*(S\d+(-S\d+)?|\([^(]*\)|\d+-\d+)?[： ]*(?=[0-9a-zA-Z])',
                             sstr, flags=re.A)
             if m:
                 # ['(', ')', '-', '–', '_', '+']
@@ -345,7 +345,8 @@ class TorTitle:
 
     def parseTorNameMore(self, torName):
         mediaSource, video, audio = '', '', ''
-        if m := re.search(r"(?<=(1080p|2160p)\s)(((\w+)\s+)?WEB(-DL)?)|WEB(-DL)?|HDTV|((UHD )?(BluRay|Blu-ray))", torName, re.I):
+        if m := re.search(r"(?<=(1080p|2160p)\s)(((\w+)\s+)?WEB(-DL)?)|\bWEB(-DL)?\b|\bHDTV\b|((UHD )?(BluRay|Blu-ray))", torName, re.I):
+        # if m := re.search(r"(?<=(1080p|2160p)\s)(((\w+)\s+)?WEB(-DL)?)|WEB(-DL)?|HDTV|((UHD )?(BluRay|Blu-ray))", torName, re.I):
             m0 = m[0].strip()
             if re.search(r'WEB[-]?DL', m0, re.I):
                 mediaSource = 'webdl'
@@ -358,7 +359,8 @@ class TorTitle:
                     mediaSource = 'bluray'
             else:
                 mediaSource = m0
-        if m := re.search(r"AVC|HEVC(\s(DV|HDR))?|H\.26[456](\s(HDR|DV))?|x26[45]\s?(10bit)?(HDR)?|DoVi (HDR(10)?)? (HEVC)?", torName, re.I):
+        if m := re.search(r"AVC|HEVC(\s(DV|HDR))?|H\.?26[456](\s(HDR|DV))?|x26[45]\s?(10bit)?(HDR)?|DoVi (HDR(10)?)? (HEVC)?", torName, re.I):
+        # if m := re.search(r"AVC|HEVC(\s(DV|HDR))?|H\.26[456](\s(HDR|DV))?|x26[45]\s?(10bit)?(HDR)?|DoVi (HDR(10)?)? (HEVC)?", torName, re.I):
             video = m[0].strip()
         if m := re.search(r"DTS-HD MA \d.\d|LPCM\s?\d.\d|TrueHD\s?\d\.\d( Atmos)?|DDP[\s\.]*\d\.\d( Atmos)?|(AAC|FLAC)(\s*\d\.\d)?( Atmos)?|DTS(?!-\w+)|DD\+? \d\.\d", torName, re.I):
             audio = m[0].strip()
