@@ -3,20 +3,7 @@
 * 与 torcp 差别在于，查询是通过 torcpdb 完成，在命令行中需要给 `-torcpdb-url` 和 `--torcpdb-apikey` 信息
 ---------
 
-[English version](README_en.md)
-
-对下载的影视文件，通过 `硬链` 或 `软链` 在另一个文件夹中改名和重组目录、以便 Emby/Plex 这样的应用程序便于刮削识别。本脚本：
-1. 对你的影视文件夹中的文件进行分类，主要处理 TV/Movie， 解析影视文件夹中的 `影视名称`，`年份`，`季`，`集`，以及 `制作组`
-2. 依照 [Emby-happy](https://support.emby.media/support/solutions/articles/44001159102-movie-naming) 的风格进行重组目录与改名，在目标目录中生成硬链或软链.
-3. 支持搜索TMDb，以获得准确的、选定语言的影视名字，然后以此名字进行更名和组织目录，对于查出了TMDb的媒体，支持按语言分类
-
-## 1 应用说明
-* [利用 qBittorrent 的完成后自动执行脚本功能实现入库](qb自动入库.md)
-* 在浏览器中安装[种子列表过滤油猴脚本](https://github.com/ccf-2012/torfilter), 本地启动**下载入库api服务 filterapi**，在页面上过滤出的标题，批量推送至 **filterapi** 进行查重和下载
-* [配合 PTPP 与torcc 实现 Emby/Plex 自动入库流程](AutoPlex.md)
-* [刮削攻略](刮削攻略.md)
-
-## 2 Last Update
+## Last Update
 * 2025.8.7 支持 `.strm` 
 * 2024.11.21 查 IMDb 由 episode 获取 series 的 IMDb，再查 TMDb
 * 2024.10.23 `--add-year-dir` 在媒体名称目录之上，加一层年份目录
@@ -42,44 +29,8 @@
 * 2022.3.13: `--lang` dispatch to different folders base on TMDb language
 * 2022.2.26: `--tmdb-api-key` Support TMDb search 
 
-## 3 准备
-> 本程序需要在 `python3` 运行环境，以命令行方式运行
-
-### 3.1 pip 安装
-* 安装torcp
-```sh
-pip3 install torcp
-```
-
-#### 3.1.1 群晖中使用python3 和 pip3
-* DSM 6.x 默认没有安装Python 3，需要要在套件中心中搜索安装 `Python 3` 
-* 群晖安装pip
-```sh
-python3 -m ensurepip
-```
-
-### 3.2 使用源码调用的方式
-* 如果你仍然习惯源码调用的方式，安装代码，仍然使用:
-```sh 
-git clone https://github.com/ccf-2012/torcp.git
-```
-
-* 这里添加了一个小的入口程序`tp.py`，你可以这样调用：
-```sh
-python tp.py -h 
-```
-
-* 后面例子中的`torcp` 都可以替换成 `python tp.py` 这样的调用方式。
-* 这样的方式，全程操作是以同一用户同一env，可能会减少出错机会。
-
-
-## 4 使用方法:
-* 完整的命令参数，可以通过这样查看：
-```sh 
-torcp -h
-```
-
-* 或使用源码安装的话，打 `python tp.py -h `
+## 使用方法:
+* 运行 `python tp.py -h `
 ```
 usage: tp.py [-h] -d HD_PATH [-e KEEP_EXT] [-l LANG] [--genre GENRE] [--other-dir OTHER_DIR] [--sep-area] [--sep-area5] [--sep-area7]
              [--torcpdb-url TORCPDB_URL] [--torcpdb-apikey TORCPDB_APIKEY] [--tv-folder-name TV_FOLDER_NAME]
@@ -145,7 +96,7 @@ options:
 
 ---
 
-## 5 通过 torcpdb 进行 TMDb 查询
+## 通过 torcpdb 进行 TMDb 查询
 * 对一个目录进行遍历查询，完成硬链
 ```sh
 python tp.py  /home/test/ -d /home/test/result3/ --torcpdb-url 'http://192.168.5.10:5009' --torcpdb-apikey  something 
@@ -158,20 +109,19 @@ python tp.py "~/test/Is.S01.2018.2019.1080p.NF.WEB-DL.DDP2.0.x264-quypham@TTG/" 
 
 ----
 
-## 6 媒体文件名生成方案
+## 媒体文件名生成方案
 
-### 6.1 `--origin-name` 与 `--tmdb-origin-name`
+### `--origin-name` 与 `--tmdb-origin-name`
 * 对于IMDb搜索到的媒体资源，目录结构将按Emby/Plex所约定的规范进行组织，目录内的文件名，有3种可能的方式：
 1. 默认的：刮削名 (年份) - 分辨率_组名.mkv
 2. `--origin-name`：TV直接使用 原文件名, Movie：刮削名 (年份) - 原文件名
 3. `--tmdb-origin-name`：刮削名 (年份) - 原文件名
 
 
-### 6.2 `--emby-bracket`， --plex-bracket`
+### `--emby-bracket`， --plex-bracket`
 * 可以使用 `--emby-bracket` 选项在 「刮削名 (年份)」之后加上如「[tmdbid=509635]」这样的emby bracket，以便Emby在刮削时直接辨认使用；
 * 对于plex，可以使用 `--plex-bracket` 生成如 「{tmdb-509635}」这样的后缀；
 * 这两个选项在使用  `--tmdb-origin-name` 时也是生效的
-
 
 * 比如：
 ```sh
@@ -212,10 +162,10 @@ python3 tp.py ../test -d ../test/result  --torcpdb-url 'http://192.168.5.10:5009
 
 -----
 
-## 7 传入IMDb信息
+## 传入IMDb信息
 * 在大部分情况下，有IMDb信息，可以确定地查出TMDb信息，有两种类型的方法：
 
-### 7.1 建一个包含IMDb id的目录
+### 建一个包含IMDb id的目录
 * 下载资源时多建一层父目录，包含IMDb信息： 即用户可以在rss站时，添加种子时就建一个以 `站点-id-IMDb` 为名的目录，作为下载资源的父目录，则torcp将以此IMDb id作为信息，对下层目录作为资源进行刮削。（by boomPa), 如：
 ```
 audies_movie-1234-tt123456\
@@ -229,14 +179,14 @@ audies_movie-1234-tt123456\
 
 
 
-### 7.2 以`--imdbid`参数指定 IMDb id
+### 以`--imdbid`参数指定 IMDb id
 * 在qb中添加种子时，加一个IMDb tag。这可以使用 [torcc](https://github.com/ccf-2012/torcc) 或 [torfilter](https://github.com/ccf-2012/torfilter) 实现
 * 在下载完成时，将此 IMDb tag 以`--imdbid` 参数传给torcp。
 * 详情参考[利用 qBittorrent 的完成后自动执行脚本功能实现入库](qb自动入库.md)
 
 ----
 
-## 8 以代码调用torcp进行二次开发
+## 以代码调用torcp进行二次开发
 * torcp 入口定义为：
 ```py  
 torcp.main(argv=None, exportObject=None)
@@ -262,7 +212,7 @@ if __name__ == '__main__':
 ```
 
 
-## 9 类型，语言，地区分目录
+## 类型，语言，地区分目录
 * 地区 `--sep-area` 与 语言 `--lang` 只选其一，`--lang` 优先（有lang了就不看area）
 * 如果地区没有取到，则会取语言代码；语言是小写，地区是大写；
 * 类型 `--genre` 独立在 地区/语言之外，如果指定了类型，只有没指定的部分会分 地区/地区
