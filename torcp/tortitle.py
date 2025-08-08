@@ -7,45 +7,45 @@ from pprint import pprint
 from torcp.torcategory import cutExt
 
 
-def isFullAscii(str):
+def is_all_ascii(str):
     return re.fullmatch(r'[\x00-\x7F]*', str, re.A)
 
 
-def containsCJK(str):
+def contains_cjk(str):
     return re.search(r'[\u4e00-\u9fa5\u3041-\u30fc]', str)
 
 
-def containdCJKKeyword(str):
+def contain_cjk_keyword(str):
     return re.search(r'^(.迪士尼\b)', str)
 
 
-def notTitle(str):
+def not_title(str):
     return re.search(r'^(BDMV|1080[pi]|MOVIE|DISC|Vol)', str, re.A | re.I)
 
-def cutAKA(titlestr):
+def cut_aka(titlestr):
     m = re.search(r'\s(/|AKA)\s', titlestr, re.I)
     if m:
         titlestr = titlestr.split(m.group(0))[0]
     return titlestr.strip()
 
-def cutAKAJP(titlestr):
+def cut_aka_jp(titlestr):
     m = re.search(r'(/|\bAKA\b)', titlestr, re.I)
     if m:
         titlestr = titlestr.split(m.group(0))[0]
     return titlestr.strip()
 
-def getIndexItem(items, index):
+def get_index_item(items, index):
     if index >= 0 and index < len(items):
         return items[index]
     else:
         return ''
 
-def is0DayName(itemstr):
+def is_0day_name(itemstr):
     # CoComelon.S03.1080p.NF.WEB-DL.DDP2.0.H.264-NPMS
     m = re.match(r'^\w+.*\b(BluRay|Blu-?ray|720p|1080[pi]|[xh].?26\d|2160p|576i|WEB-DL|DVD|WEBRip|HDTV)\b.*', itemstr, flags=re.A | re.I)
     return m
 
-def getNoBracketedStr(torName, items):
+def cut_brackets(torName, items):
     ss = torName
     for s in items:
         ss = ss.replace('[' + s + ']', '')
@@ -55,19 +55,19 @@ def getNoBracketedStr(torName, items):
 
     return ss
 
-def cutBracketedTail(sstr):
+def cut_bracketed_tail(sstr):
     m = re.search(r'^\w+.*(\[[^\]]*\]?)', sstr)
     if m:
         sstr = sstr[:m.span(1)[0]]
     return sstr
 
-def bracketToBlank(sstr):
+def bracket_to_blank(sstr):
     dilimers = ['(', ')', '-', '–', '_', '+']
     for dchar in dilimers:
         sstr = sstr.replace(dchar, ' ')
     return re.sub(r' +', ' ', sstr).strip()
 
-def delimerToBlank(sstr):
+def delimer_to_blank(sstr):
     dilimers = ['[', ']', '.', '{', '}', '_', ',']
     for dchar in dilimers:
         sstr = sstr.replace(dchar, ' ')
@@ -78,11 +78,11 @@ def cutspan(sstr, ifrom, ito):
         sstr = sstr[0:ifrom:] + sstr[ito::]
     return sstr
 
-def subEpisodeChar(partStr):
+def sub_episode_char(partStr):
     partOrder = string.ascii_uppercase.find(partStr[0].upper()) + 1
     return ('Part %d' % partOrder) if partOrder > 0 else ''
 
-def subEpisodePart(partStr):
+def sub_episode_part(partStr):
     partOrder = string.digits.find(partStr[0])
     if partOrder < 0:
         partOrder = string.ascii_uppercase.find(partStr[0].upper()) + 1
@@ -91,7 +91,7 @@ def subEpisodePart(partStr):
 
 class TorTitle:
 
-    def parseSeason(self, sstr):
+    def parse_season(self, sstr):
         seasonstr = ''
         seasonspan = [-1, -1]
         episodestr = ''
@@ -115,7 +115,7 @@ class TorTitle:
                 seasonstr = m2.group(2).strip()
                 episodestr = m2.group(3).strip()
             if m2.group(5):
-                self.subEpisode  = subEpisodeChar(m2.group(5).strip())
+                self.subEpisode  = sub_episode_char(m2.group(5).strip())
             return seasonstr, seasonspan, episodestr
 
             # seasonsapn = mcns.span(1)
@@ -145,7 +145,7 @@ class TorTitle:
         return seasonstr, seasonspan, episodestr
 
 
-    def parseYear(self, sstr):
+    def parse_year(self, sstr):
         yearstr = ''
         yearspan = [-1, -1]
         m2 = re.search(
@@ -164,7 +164,7 @@ class TorTitle:
 
 
     def parseJpAniName(self, torName):
-        yearstr, yearspan = self.parseYear(torName)
+        yearstr, yearspan = self.parse_year(torName)
 
         items = re.findall(r'\[([^\]]*[^[]*)\]', torName)
 
@@ -172,14 +172,14 @@ class TorTitle:
             return self.parse0DayMovieName(torName)
 
         for s in items:
-            if is0DayName(s):
+            if is_0day_name(s):
                 return self.parse0DayMovieName(s)
 
-        strLeft = getNoBracketedStr(torName, items)
+        strLeft = cut_brackets(torName, items)
         if len(strLeft) > 0:
             # yearstr, titlestr = getYearStr(torName)
-            titlestr = bracketToBlank(strLeft)
-            return cutAKAJP(titlestr), yearstr, '', '', ''
+            titlestr = bracket_to_blank(strLeft)
+            return cut_aka_jp(titlestr), yearstr, '', '', ''
 
         jptitles = []
         titlestrs = []
@@ -191,7 +191,7 @@ class TorTitle:
             if re.match(r'^\d+$', item):
                 continue
 
-            if containsCJK(item):
+            if contains_cjk(item):
                 jptitles.append(item)
             else:
                 titlestrs.append(item)
@@ -210,18 +210,18 @@ class TorTitle:
                 pass
                 # raise 'Some thing Wrong'
 
-        titlestr = cutBracketedTail(titlestr)
-        titlestr = bracketToBlank(titlestr)
+        titlestr = cut_bracketed_tail(titlestr)
+        titlestr = bracket_to_blank(titlestr)
 
-        return cutAKAJP(titlestr), yearstr, '', '', jptitle
+        return cut_aka_jp(titlestr), yearstr, '', '', jptitle
 
-    def checkAfterSeason(self, sstr, seasonspan):
+    def check_after_season(self, sstr, seasonspan):
         if self.subEpisode:
             return sstr
         afterStr = sstr[seasonspan[1]:]
         m = re.search(r'part\s*(\d+|[A-Z])', afterStr, flags=re.I)
         if m:
-            self.subEpisode = subEpisodePart(m.group(1))
+            self.subEpisode = sub_episode_part(m.group(1))
             return cutspan(sstr, seasonspan[0], seasonspan[1]+m.span(0)[1])
         else:
             return sstr
@@ -259,19 +259,19 @@ class TorTitle:
 
         failsafeTitle = sstr
         sstr = self._clean_title(sstr)
-        sstr = delimerToBlank(sstr)
+        sstr = delimer_to_blank(sstr)
         if sstr:
             failsafeTitle = sstr
 
-        seasonstr, seasonspan, episodestr = self.parseSeason(sstr)
+        seasonstr, seasonspan, episodestr = self.parse_season(sstr)
         if not seasonstr:
-            seasonstr, seasonspan2, episodestr = self.parseSeason(torName)
+            seasonstr, seasonspan2, episodestr = self.parse_season(torName)
         self.seasonstr = seasonstr
-        sstr = self.checkAfterSeason(sstr, seasonspan)
+        sstr = self.check_after_season(sstr, seasonspan)
         
-        yearstr, yearspan = self.parseYear(sstr)
+        yearstr, yearspan = self.parse_year(sstr)
         if not yearstr:
-            yearstr, yearspan = self.parseYear(torName)
+            yearstr, yearspan = self.parse_year(torName)
             yearspan = [-1, -1]
 
         if seasonspan[0] > yearspan[0]:
@@ -284,7 +284,7 @@ class TorTitle:
         skipcut = False
         if syspan and syspan[0] > 1 :
             spanstrs = sstr.split(systr)
-            if containdCJKKeyword(sstr[:syspan[0]]):
+            if contain_cjk_keyword(sstr[:syspan[0]]):
                 sstr = sstr[syspan[1]:]
                 skipcut = True
             else:
@@ -311,7 +311,7 @@ class TorTitle:
         # if titlestr.endswith(')'):
         #     titlestr = re.sub(r'\(.*$', '', sstr).strip()
         cntitle = ''
-        if containsCJK(sstr):
+        if contains_cjk(sstr):
             cntitle = sstr
             # m = re.search(r'^.*[^\x00-\x7F](S\d+|\s|\.||||||||)*\b(?=[a-zA-Z])', sstr, flags=re.A)
             # m = re.search( r'^.*[^a-zA-Z_\- &0-9](S\d+|\s|\.||)*\b(?=[A-Z])', titlestr, flags=re.A)
@@ -334,12 +334,12 @@ class TorTitle:
             # 取第1个空格之前的部分
             cntitle = re.match(r'^[^ \(\[]*', cntitle).group()
 
-        titlestr = bracketToBlank(sstr)
-        titlestr = cutAKA(titlestr)
+        titlestr = bracket_to_blank(sstr)
+        titlestr = cut_aka(titlestr)
         if len(titlestr) > 5:
             titlestr = re.sub(r'part\s?\d+$', '', titlestr, flags=re.I).strip()
-        if not containsCJK(titlestr) and len(titlestr) < 3:
-            titlestr = bracketToBlank(failsafeTitle)
+        if not contains_cjk(titlestr) and len(titlestr) < 3:
+            titlestr = bracket_to_blank(failsafeTitle)
 
         return titlestr, yearstr, seasonstr, episodestr, cntitle
 
