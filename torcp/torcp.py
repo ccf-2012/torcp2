@@ -426,7 +426,21 @@ class MediaReNameProcessor:
 
     def useless_file(self, entry_name):
         return entry_name in ['@eaDir', '.DS_Store', '.@__thumb']
-    
+
+    def get_season_from_foldername(self, folderName, failDir=''):
+        m1 = re.search(r'(\bS\d+(-S\d+)?|第(\d+)季)', folderName, flags=re.A | re.I)
+        if m1:
+            if m1.group(3):
+                return 'S' + m1.group(3)
+            else:
+                return m1.group(1)
+        elif m2 := re.search(r'第(\w+)季', folderName,  re.I):
+            sstr = chinese_to_number(m2.group(1))
+            return 'S'+sstr.zfill(2)
+        else:
+            return folderName
+
+
     def _fix_nt_name(self, file_path):
         if platform.system() == 'Windows':
             return re.sub(r'[:?<>*\/\"]', ' ', file_path)
@@ -648,7 +662,7 @@ class MediaReNameProcessor:
 
             tv_item_path = os.path.join(tv_source_folder, tv_item)
             if os.path.isdir(tv_item_path):
-                season_folder = self.getSeasonFromFolderName(tv_item, failDir=parse_season)
+                season_folder = self.get_season_from_foldername(tv_item, failDir=parse_season)
                 season_folder = self.rename_s0d(season_folder)                       
                 self.copy_tv_season_items(tv_item_path, gen_folder, season_folder, parse_group,
                                 resolution, folder_tmdb_parser=folder_tmdb_parser)
