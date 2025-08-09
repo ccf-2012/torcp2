@@ -1,6 +1,6 @@
 # torcp2
 * since 2024.11.24 启动 torcp2 以将查询 TMDb/IMDb 等操作分离出，以对 TORDB 作 api 查询方式实现
-* 与 torcp 差别在于，查询是通过 torcpdb 完成，在命令行中需要给 `-torcpdb-url` 和 `--torcpdb-apikey` 信息
+* 与 torcp 差别在于，查询是通过 torcpdb 完成，在命令行中需要给 `--torcpdb-url` 和 `--torcpdb-apikey` 信息
 ---------
 
 ## Last Update
@@ -205,7 +205,7 @@ class TorcpExportObj:
 
 
 if __name__ == '__main__':
-	argv = ["~/torccf/test", "-d", "~/torccf/result", "--tmdb-api-key", "your_tmdb_api_key", "--emby-bracket", "--extract-bdmv", "--tmdb-origin-name"]
+	argv = ["~/torccf/test", "-d", "~/torccf/result", "--torcpdb-url", "<torcpdb-url>", "--torcpdb-apikey", "<api-key>", "--emby-bracket", "--extract-bdmv", "--tmdb-origin-name"]
 	eo = TorcpExportObj()
 	o = Torcp()
 	o.main(argv, eo)

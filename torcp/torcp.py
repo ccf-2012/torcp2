@@ -17,6 +17,7 @@ from torcp.torcategory import TorCategory
 from torcp.tortitle import TorTitle, is_0day_name
 from torcp.cacheman import CacheManager
 
+VIDEO_EXTS = ['.mkv', '.mp4', '.ts', '.m2ts', '.mov', '.strm']
 logger = logging.getLogger(__name__)
 
 
@@ -62,7 +63,7 @@ class Config:
     def __init__(self, argv=None):
         self.argv = argv
         self.args = None
-        self.keep_exts = ['.mkv', '.mp4', '.ts', '.m2ts', '.mov', '.strm']
+        self.keep_exts = list(VIDEO_EXTS)
         self.keep_ext_all = False
         self.load_args()
 
@@ -266,13 +267,13 @@ class MediaReNameProcessor:
                         self.logger.info(f'Process collections: {item_name}')
                         pack_dir = os.path.join(parent_location, item_name)
                         for fn in os.listdir(pack_dir):
-                            if search_cache and search_cache.isCached(fn):
+                            if search_cache and search_cache.is_cached(fn):
                                 self.logger.info(f'Skipping. File previously linked: {fn}')
                                 continue
                             self.process_one_dir_item(pack_dir, fn, imdbidstr='')
                             if search_cache: search_cache.append(fn)
                     else:
-                        if search_cache and search_cache.isCached(item_name):
+                        if search_cache and search_cache.is_cached(item_name):
                             self.logger.info(f'Skipping. File previously linked: {item_name}')
                             continue
                         if (folder_imdb_id or folder_tmdb_id) and (parent_location != cp_location):
@@ -281,7 +282,7 @@ class MediaReNameProcessor:
                             self.process_one_dir_item(parent_location, item_name, imdbidstr=folder_imdb_id, tmdbidstr=folder_tmdb_id)
                         if search_cache: search_cache.append(item_name)
 
-        if search_cache: search_cache.closeCache()
+        if search_cache: search_cache.close_cache()
 
     def process_one_dir_item(self, cp_location, item_name, imdbidstr='', tmdbidstr=''):
         self.cur_media_name = item_name
@@ -572,7 +573,7 @@ class MediaReNameProcessor:
         return tv_name.strip()
 
     def count_media_file(self, file_path):
-        types = ('*.mkv', '*.mp4', '*.ts', '*.m2ts', '*.mov')
+        types = tuple(f"*{ext}" for ext in VIDEO_EXTS if ext not in ['.strm'])
         cur_dir = os.getcwd()
         media_count = 0
         try:
@@ -584,7 +585,9 @@ class MediaReNameProcessor:
             pass
         return media_count
     
-    def get_media_files(self, file_path, types=('*.mkv', '*.mp4', '*.ts', '*.m2ts', '*.mov','.strm')):
+    def get_media_files(self, file_path, types=None):
+        if types is None:
+            types = tuple(f"*{ext}" for ext in VIDEO_EXTS)
         files_found = []
         cur_dir = os.getcwd()
         try:

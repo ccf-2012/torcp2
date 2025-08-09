@@ -24,7 +24,7 @@ class CacheManager:
             # self.history_json_fd.close()
             return False
 
-    def isCached(self, file_path):
+    def is_cached(self, file_path):
         for name in self.search_history['path_dupped']:
             if file_path == name:
                 return True
@@ -38,6 +38,6 @@ class CacheManager:
         json.dump(self.search_history, self.history_json_fd, indent=4)
         self.history_json_fd.seek(0)
 
-    def closeCache(self):
+    def close_cache(self):
         self.history_json_fd.close()
 
