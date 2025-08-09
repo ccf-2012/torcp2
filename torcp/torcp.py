@@ -113,6 +113,7 @@ class Config:
         parser.add_argument('--site-str', help="site-id(ex. hds-12345) folder name, set site strs like ('chd,hds,ade,ttg').")
         parser.add_argument('--add-year-dir', action='store_true', help='Add a year dir above the media folder')
         parser.add_argument('--genre-with-area', default='', help='specify genres with area subdir, seperated with comma')
+        parser.add_argument('-pr', '--title-regex', default='', help='the regex to match the title from path')
 
         self.args = parser.parse_args(self.argv)
         self._make_keep_exts()
@@ -292,9 +293,20 @@ class MediaReNameProcessor:
             return
 
         self.logger.info(f" >> [{item_name}] {imdbidstr} {tmdbidstr}")
+
+        title_for_parsing = item_name
+        if self.args.title_regex:
+            match = re.search(self.args.title_regex, item_name)
+            if match:
+                if match.groups():
+                    title_for_parsing = match.group(1)
+                else:
+                    title_for_parsing = match.group(0)
+                self.logger.info(f"Extracted title '{title_for_parsing}' using regex: {self.args.title_regex}")
+
         cat = self.set_args_category()
         p = TMDbNameParser(self.args.torcpdb_url, self.args.torcpdb_apikey, ccfcat_hard=cat)
-        p.parse(item_name, useTMDb=(self.args.torcpdb_url is not None), hasIMDbId=imdbidstr, hasTMDbId=tmdbidstr, exTitle=self.args.extitle)
+        p.parse(title_for_parsing, useTMDb=(self.args.torcpdb_url is not None), hasIMDbId=imdbidstr, hasTMDbId=tmdbidstr, exTitle=self.args.extitle)
         p.title = self._fix_nt_name(p.title)
         cat = self.gen_cat_folder_name(p)
 
@@ -334,7 +346,7 @@ class MediaReNameProcessor:
             elif file_ext.lower() in ['.iso']:
                 if self.args.full_bdmv or self.args.extract_bdmv:
                     bdmv_folder = os.path.join('BDMVISO', dest_folder_name)
-                    self.fs_manager.target_copy(media_src, bmv_folder)
+                    self.fs_manager.target_copy(media_src, bdmv_folder)
                     self.target_dir_hook(bdmv_folder, tmdbidstr='', tmdbcat='iso', tmdbtitle=item_name, tmdbobj=None)
                 else:
                     self.logger.info(f'Skip .iso file:  {media_src}')
