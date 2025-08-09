@@ -292,7 +292,7 @@ class MediaReNameProcessor:
             self.logger.info(f'SKIP symbolic link: [{media_src}]')
             return
 
-        self.logger.info(f" >> [{item_name}] {imdbidstr} {tmdbidstr}")
+        self.logger.info(f" itemname: {item_name}], imdbidstr: {imdbidstr}, tmdbidstr: {tmdbidstr}")
 
         title_for_parsing = item_name
         if self.args.title_regex:

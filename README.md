@@ -4,6 +4,7 @@
 ---------
 
 ## Last Update
+* 2025.8.9 新增 `--title-regex` 指定文件名或目录名，与此正则匹配上的部分进行识别
 * 2025.8.7 支持 `.strm` 
 * 2024.11.21 查 IMDb 由 episode 获取 series 的 IMDb，再查 TMDb
 * 2024.10.23 `--add-year-dir` 在媒体名称目录之上，加一层年份目录
@@ -32,12 +33,10 @@
 ## 使用方法:
 * 运行 `python tp.py -h `
 ```
-usage: tp.py [-h] -d HD_PATH [-e KEEP_EXT] [-l LANG] [--genre GENRE] [--other-dir OTHER_DIR] [--sep-area] [--sep-area5] [--sep-area7]
-             [--torcpdb-url TORCPDB_URL] [--torcpdb-apikey TORCPDB_APIKEY] [--tv-folder-name TV_FOLDER_NAME]
-             [--movie-folder-name MOVIE_FOLDER_NAME] [--tv] [--movie] [--dryrun] [--single] [--extract-bdmv] [--full-bdmv]
-             [--origin-name] [--tmdb-origin-name] [--sleep SLEEP] [--move-run] [--make-log] [--symbolink] [--cache] [--emby-bracket]
-             [--plex-bracket] [--make-plex-match] [--make-nfo] [--after-copy-script AFTER_COPY_SCRIPT] [--imdbid IMDBID]
-             [--tmdbid TMDBID] [--extitle EXTITLE] [--site-str SITE_STR] [--add-year-dir] [--genre-with-area GENRE_WITH_AREA]
+usage: tp.py [-h] -d HD_PATH [-e KEEP_EXT] [-l LANG] [--genre GENRE] [--other-dir OTHER_DIR] [--sep-area] [--sep-area5] [--sep-area7] [--torcpdb-url TORCPDB_URL] [--torcpdb-apikey TORCPDB_APIKEY]
+             [--tv-folder-name TV_FOLDER_NAME] [--movie-folder-name MOVIE_FOLDER_NAME] [--tv] [--movie] [--dryrun] [--single] [--extract-bdmv] [--full-bdmv] [--origin-name] [--tmdb-origin-name]
+             [--sleep SLEEP] [--move-run] [--make-log] [--symbolink] [--cache] [--emby-bracket] [--plex-bracket] [--make-plex-match] [--make-nfo] [--after-copy-script AFTER_COPY_SCRIPT]
+             [--imdbid IMDBID] [--tmdbid TMDBID] [--extitle EXTITLE] [--site-str SITE_STR] [--add-year-dir] [--genre-with-area GENRE_WITH_AREA] [-pr TITLE_REGEX]
              MEDIA_DIR
 
 torcp: a script hardlink media files and directories in Emby-happy naming and structs.
@@ -92,6 +91,8 @@ options:
   --add-year-dir        Add a year dir above the media folder
   --genre-with-area GENRE_WITH_AREA
                         specify genres with area subdir, seperated with comma
+  -pr TITLE_REGEX, --title-regex TITLE_REGEX
+                        the regex to match the title from path
 ```
 
 ---
