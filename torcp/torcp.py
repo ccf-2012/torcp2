@@ -431,7 +431,7 @@ class MediaReNameProcessor:
 
     def _match_site_id(self, str_):
         site_str = self.args.site_str.replace(',', '|') if self.args.site_str else 'chd|hds|ourbits|hdc|ttg|ade|cmct|frds|pter|u2|mteam|hdh|lemon'
-        m1 = re.search(r'(' + site_str + ')-(\d+)$', str_.strip(), re.A | re.I)
+        m1 = re.search(r'\(' + site_str + r'\)\-(\d+)$', str_.strip(), re.A | re.I)
         return m1[2] if m1 else None
 
     def is_collections(self, folder_name):
