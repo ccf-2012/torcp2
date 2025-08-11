@@ -41,6 +41,7 @@ TEST_CASES = [
     ('金刚狼3殊死一战.Logan.2017.BluRay.1080p.x265.10bit.MNHD-FRDS', {'title': 'Logan', 'cntitle': '金刚狼3殊死一战', 'year': '2017', 'type': 'movie', "season": '', "episode": ''}),
     ('人工智能4K REMUX (2001)', {'title': '人工智能', 'cntitle': '人工智能', 'year': '2001', 'type': 'movie', "season": '', "episode": ''}),
     ('1988 骗徒臭事多 Dirty Rotten Scoundrels 豆瓣：8.2（美国）', {'title': 'Dirty Rotten Scoundrels', 'cntitle': '骗徒臭事多', 'year': '1988', 'type': 'movie', "season": '', "episode": ''}),
+    ('蝙蝠侠前传：黑暗骑士崛起4K REMUX（2012）', {'title': '蝙蝠侠前传：黑暗骑士崛起', 'cntitle': '蝙蝠侠前传：黑暗骑士崛起', 'year': '2012', 'type': 'movie', "season": '', "episode": ''})
 
 ]
 

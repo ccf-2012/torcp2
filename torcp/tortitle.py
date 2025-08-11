@@ -150,7 +150,7 @@ class TorTitle:
 
     def _cut_s_keyword(self):
         tags = [
-            '2160p', '1080p', '720p', '480p', 'BluRay', 'Remux', 
+            '2160p', '1080p', '720p', '480p', 'BluRay', r'(4K)?\s*Remux', 
             r'WEB-?(DL)?', r'(?<![a-z])4K', r'\b\w+版', r'全\d+集'
         ]
         pattern = r'(' + '|'.join(tag for tag in tags) + r')\b.*$'

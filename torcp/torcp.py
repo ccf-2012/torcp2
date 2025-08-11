@@ -292,8 +292,6 @@ class MediaReNameProcessor:
             self.logger.info(f'SKIP symbolic link: [{media_src}]')
             return
 
-        self.logger.info(f" itemname: {item_name}], imdbidstr: {imdbidstr}, tmdbidstr: {tmdbidstr}")
-
         title_for_parsing = item_name
         if self.args.title_regex:
             match = re.search(self.args.title_regex, item_name)
@@ -305,6 +303,8 @@ class MediaReNameProcessor:
                 self.logger.info(f"Extracted title '{title_for_parsing}' using regex: {self.args.title_regex}")
 
         cat = self.set_args_category()
+
+        # self.logger.info(f">> title_for_parsing: {title_for_parsing}")
         p = TMDbNameParser(self.args.torcpdb_url, self.args.torcpdb_apikey, ccfcat_hard=cat)
         p.parse(title_for_parsing, useTMDb=(self.args.torcpdb_url is not None), hasIMDbId=imdbidstr, hasTMDbId=tmdbidstr, exTitle=self.args.extitle)
         p.title = self._fix_nt_name(p.title)
