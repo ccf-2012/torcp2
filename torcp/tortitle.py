@@ -15,7 +15,7 @@ def cut_ext(tor_name):
         return tor_name
 
 def delimer_to_space(sstr):
-    dilimers = ['[', ']', '.', '{', '}', '_', ',' ]
+    dilimers = ['[', ']', '.', '{', '}', '_', ',', '(', ')' ]
     for dchar in dilimers:
         sstr = sstr.replace(dchar, ' ')
     return sstr
@@ -101,7 +101,7 @@ class TorTitle:
         self.title = delimer_to_space(self.title)
 
     def _extract_year(self):
-        potential_years = re.findall(r'\b(19\d{2}|20\d{2})(?:\d{4})?\b', self.title)
+        potential_years = re.findall(r'(19\d{2}|20\d{2})(?:\d{4})?\b', self.title)
         if potential_years:
             self.year = potential_years[-1]
             self._year_pos = self.title.rfind(self.year)
@@ -151,20 +151,22 @@ class TorTitle:
     def _cut_s_keyword(self):
         tags = [
             '2160p', '1080p', '720p', '480p', 'BluRay', r'(4K)?\s*Remux', 
-            r'WEB-?(DL)?', r'(?<![a-z])4K', r'\b\w+版', r'全\d+集'
+            r'WEB-?(DL)?', r'(?<![a-z])4K', r'(?<=\w\s)BDMV',
         ]
         pattern = r'(' + '|'.join(tag for tag in tags) + r')\b.*$'
         self.title = re.sub(pattern, '', self.title, flags=re.IGNORECASE)
         self.title = self.title.strip()
 
     def _extract_titles(self):
+        failsafe = self.title
         self._cut_s_year_season()
+        failsafe = self.title if len(self.title) > 0 else failsafe
         self._cut_s_keyword()
 
         self.cntitle = ''
         if contains_cjk(self.title):
             self.cntitle = self.title
-            if m := re.search(r"([一-鿆]+[\-0-9a-zA-Z]*)[ :：]+([^一-鿆]+)", self.title, flags=re.I):
+            if m := re.search(r"([一-鿆]+[\-0-9a-zA-Z]*)[ :：]+([^一-鿆]+\b)", self.title, flags=re.I):
                 self.cntitle = self.cntitle[:m.span(1)[1]]
                 self.title = m.group(2)
 
@@ -175,28 +177,37 @@ class TorTitle:
             # 取汉字串中第一个空格前部分
             self.cntitle = re.match(r'^([^ \-\(\[]*)', self.cntitle).group()
 
+        self.title = self.title.strip()
         if not self.title:
-            self.title = self.cntitle
-        self.title = hyphen_to_space(self.title)
-        self.title = cut_aka(self.title)
+            self.title = failsafe
+        return
+
+    def _check_title(self):
+        m1 = re.search('[a-zA-Z]', self.title)
+        if len(self.title) > 2 and m1:
+            return True
+        else:
+            return False
 
     def _polish_title(self):
-        if self.type == 'tv':
-            tv_pattern = r'S\d+E\d+|S\d+|Ep\d+|Season \d+|' \
-                         r'第\d+季|第\d+集'
-            self.title = re.split(tv_pattern, self.title, flags=re.IGNORECASE)[0]
-
         self.title = re.sub(r'[\._\+]', ' ', self.title)
         tags = [
-            'BTV', r'CCTV\s*\d+(HD|\+)?', 'HunanTV',
-            'COMPLETE', 'REPACK', 'PROPER',
+            'BTV', r'CCTV\s*\d+(HD|\+)?', 'HunanTV', r'Top\s*\d+',
+            r'\b\w+版', r'全\d+集', 'BDMV',
+            'COMPLETE', 'REPACK', 'PROPER', 'REMASTER\w*',
             'iNTERNAL', 'LIMITED', 'EXTENDED', 'UNRATED', 
             "Director's Cut"
         ]
         pattern = r'\b(' + '|'.join(tag for tag in tags) + r')\b'
         self.title = re.sub(pattern, '', self.title, flags=re.IGNORECASE)
         self.title = self.title.strip()
-            
+
+        self.title = hyphen_to_space(self.title)
+        self.title = cut_aka(self.title)
+
+        if not self._check_title() and self.cntitle:
+            self.title = self.cntitle
+
         # self.title = re.sub(r'\s+', ' ', self.title).strip()
         # self.title = self.title.split('-')[0].strip()
 
