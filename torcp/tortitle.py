@@ -60,8 +60,8 @@ class TorTitle:
         self.type = 'movie'
         self.season = ''
         self.episode = ''
-        self.season_int = None
-        self.episode_int = None
+        # self.season_int = None
+        # self.episode_int = None
         self._se_pos = 0
         self._year_pos = 0
         self.parse()
