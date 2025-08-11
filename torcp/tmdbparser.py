@@ -159,8 +159,8 @@ class TMDbNameParser():
         self.ccfcat, self.group = tc.ccfcat, tc.group
         self.resolution = tc.resolution
         tt = tortitle.TorTitle(torname)
-        self.title, parseYear, self.season, self.episode, self.cntitle = tt.title, tt.yearstr, tt.season, tt.episode, tt.cntitle 
-        self.mediaSource, self.videoCodec, self.audioCodec = tt.parseTorNameMore(torname)
+        self.title, parseYear, self.season, self.episode, self.cntitle = tt.title, tt.yearstr, tt.season_int, tt.episode_int, tt.cntitle 
+        self.mediaSource, self.videoCodec, self.audioCodec = tt.parse_more(torname)
         self.year = tryint(parseYear)
 
         if self.season and (self.ccfcat != 'TV'):

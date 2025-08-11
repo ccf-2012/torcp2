@@ -1,3 +1,4 @@
 tmdbv3api
 cinemagoer
 loguru
+pytest

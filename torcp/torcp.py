@@ -571,7 +571,7 @@ class MediaReNameProcessor:
 
     def gen_tv_season_epison_group(self, media_filename, group_name, resolution):
         tt = TorTitle(media_filename)
-        tv_title, tv_year, tv_season, tv_episode, cn_title = tt.title, tt.yearstr, tt.season, tt.episode, tt.cntitle
+        tv_title, tv_year, tv_season, tv_episode, cn_title = tt.title, tt.yearstr, tt.season_int, tt.episode_int, tt.cntitle
         cut_name = self.cut_origin_name(media_filename)
 
         tv_episode = re.sub(r'^Ep\s*', 'E', tv_episode, flags=re.I)
