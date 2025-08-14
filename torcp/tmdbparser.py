@@ -86,7 +86,7 @@ class TMDbNameParser():
         self.popularity = 0
         self.poster_path = ''
         self.release_air_date = ''
-        self.genre_ids =[]
+        self.genres = ''
         self.release_air_date = ''
         self.mediaSource = ''
         self.videoCodec = ''
@@ -106,9 +106,9 @@ class TMDbNameParser():
 
     def getGenres(self):
         ll = []
-        if self.genre_ids:
+        if self.genres:
             genre_list = GENRE_LIST_cn
-            for x in self.genre_ids:
+            for x in self.genres:
                 s = next((y for y in genre_list if str(y['id'])==x), None)
                 if s:
                     ll.append(s['name'])
@@ -116,9 +116,9 @@ class TMDbNameParser():
 
     def getGenreStr(self):
         genrestr = ''
-        if self.genre_ids:
+        if self.genres:
             genre_list = GENRE_LIST_cn
-            for x in self.genre_ids:
+            for x in self.genres:
                 s = next((y for y in genre_list if y['id']==x), None)
                 if s:
                     genrestr += s['name'] 
@@ -142,7 +142,7 @@ class TMDbNameParser():
         self.original_language = ''
         self.popularity = 0
         self.poster_path = ''
-        self.genre_ids =[]
+        self.genres = ''
         self.tmdbDetails = None
         self.imdbid = ''
         self.imdbval = 0.0
@@ -201,9 +201,9 @@ class TMDbNameParser():
                         json_data['imdbid'] = hasIMDbId
                     logger.info(f'torname: {torname}, tmdbstr: {hasTMDbId}, imdbid: {hasIMDbId}, exTitle: {exTitle}, infolink: {infolink}')
                     result = self.query_torcpdb(json_data)
-                    if result['success']:
+                    if result:
                         self.saveResult(result)
-                        logger.success(f'TMDb查得: {result["data"]["tmdb_cat"]}-{result["data"]["tmdb_id"]}, {result["data"]["tmdb_title"]}, {result["data"]["year"]}, {result["data"]["production_countries"]}, {result["data"]["genre_ids"]}')
+                        logger.success(f'TMDb查得: {self.tmdbcat}-{self.tmdbid}, {self.title}, {self.year}, {self.genres}, {self.origin_country}, {self.original_title}')
                         self.ccfcat = transToCCFCat(self.tmdbcat, self.ccfcat)
                     else:
                         logger.warning(f'TMDb 没有结果: {torname}, {exTitle}, {hasIMDbId}, {infolink}')
@@ -226,48 +226,47 @@ class TMDbNameParser():
                 headers=headers,
                 json=json_data
             )
-            response.raise_for_status()  # 如果响应状态码不是200，抛出异常
+            if response.status_code == 404:
+                logger.debug(f'{json_data["torname"]} not found')
+            # response.raise_for_status()  # 如果响应状态码不是200，抛出异常
             return response.json()
         except requests.RequestException as e:
             print(f"查询失败: {str(e)}")
             raise
 
     def saveResult(self, result):
-        if "data" in result:
-            if "tmdb_title" in result["data"]:
-                self.title = result["data"]["tmdb_title"]
-            if "tmdb_title" in result["data"]:
-                self.title = result["data"]["tmdb_title"]
-            if "tmdb_cat" in result["data"]:
-                self.tmdbcat = result["data"]["tmdb_cat"]
-            if "tmdb_id" in result["data"]:
-                self.tmdbid = result["data"]["tmdb_id"]
-            if "imdb_id" in result["data"]:
-                self.imdbid = result["data"]["imdb_id"]
-            if "imdb_val" in result["data"]:
-                self.imdbval = result["data"]["imdb_val"]
-            if "year" in result["data"]:
-                self.year = result["data"]["year"]
-            if "original_language" in result["data"]:
-                self.original_language = result["data"]["original_language"]
-            if "popularity" in result["data"]:
-                self.popularity = result["data"]["popularity"]
-            if "poster_path" in result["data"]:
-                self.poster_path = result["data"]["poster_path"]
-            if "release_air_date" in result["data"]:
-                self.release_air_date = result["data"]["release_air_date"]
-            if "genre_ids" in result["data"]:
-                self.genre_ids = self.genreStr2List(result["data"]["genre_ids"])
-            if "origin_country" in result["data"]:
-                self.origin_country = result["data"]["origin_country"]
-            if "original_title" in result["data"]:
-                self.original_title = result["data"]["original_title"]
-            if "overview" in result["data"]:
-                self.overview = result["data"]["overview"]
-            if "vote_average" in result["data"]:
-                self.vote_average = result["data"]["vote_average"]
-            if "production_countries" in result["data"]:
-                self.production_countries = result["data"]["production_countries"]
+        if "tmdb_title" in result:
+            self.title = result["tmdb_title"]
+        if "tmdb_cat" in result:
+            self.tmdbcat = result["tmdb_cat"]
+        if "tmdb_id" in result:
+            self.tmdbid = result["tmdb_id"]
+        if "imdb_id" in result:
+            self.imdbid = result["imdb_id"]
+        if "imdb_val" in result:
+            self.imdbval = result["imdb_val"]
+        if "tmdb_year" in result:
+            self.year = result["tmdb_year"]
+        if "original_language" in result:
+            self.original_language = result["original_language"]
+        if "popularity" in result:
+            self.popularity = result["popularity"]
+        if "tmdb_poster" in result:
+            self.poster_path = result["tmdb_poster"]
+        if "release_air_date" in result:
+            self.release_air_date = result["release_air_date"]
+        if "tmdb_genres" in result:
+            self.genres = result["tmdb_genres"]
+        if "origin_country" in result:
+            self.origin_country = result["origin_country"]
+        if "original_title" in result:
+            self.original_title = result["original_title"]
+        if "tmdb_overview" in result:
+            self.overview = result["tmdb_overview"]
+        if "vote_average" in result:
+            self.vote_average = result["vote_average"]
+        if "production_countries" in result:
+            self.production_countries = result["production_countries"]
 
 
     def getProductionArea(self):
