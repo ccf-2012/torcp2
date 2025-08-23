@@ -74,8 +74,13 @@ class TorTitle:
         self._extract_titles()
         self._polish_title()
         # self._handle_special_cases()
+        self.media_source, self.video, self.audio = self._parse_more(self.raw_name)
+        self.group = self._parse_group(self.raw_name)
+        self.resolution = self._parse_resolution(self.raw_name)
+        self.full_season = (self.type == 'tv') and (self.episode == '')
 
-    def parse_more(self, torName):
+
+    def _parse_more(self, torName):
         mediaSource, video, audio = '', '', ''
         if m := re.search(r"(?<=(1080p|2160p)\s)(((\w+)\s+)?WEB(-DL)?)|\bWEB(-DL)?\b|\bHDTV\b|((UHD )?(BluRay|Blu-ray))", torName, re.I):
             m0 = m[0].strip()
@@ -92,10 +97,34 @@ class TorTitle:
                 mediaSource = m0
         if m := re.search(r"AVC|HEVC(\s(DV|HDR))?|H\.?26[456](\s(HDR|DV))?|x26[45]\s?(10bit)?(HDR)?|DoVi (HDR(10)?)? (HEVC)?", torName, re.I):
             video = m[0].strip()
-        if m := re.search(r"DTS-HD MA \d.\d|LPCM\s?\d.\d|TrueHD\s?\d\.\d( Atmos)?|DDP[\s\.]*\d\.\d( Atmos)?|(AAC|FLAC)(\s*\d\.\d)?( Atmos)?|DTS(?!-\w+)|DD\+? \d\.\d", torName, re.I):
+        if m := re.search(r"DTS-HD MA \d.\d|LPCM\s?\d.\d|TrueHD\s?\d\.\d( Atmos)?|DDP[\s\.]*\d\.\d( Atmos)?|(AAC|FLAC)(\s*\d\.\d)?( Atmos)?|DTS(\s?\d\.\d)?|DD\+? \d\.\d", torName, re.I):
             audio = m[0].strip()
         return mediaSource, video, audio
-    
+
+    def _parse_resolution(self, torName):
+        match = re.search(r'\b(4K|2160p|1080[pi]|720p|576p|480p)\b', torName, re.A | re.I)
+        if match:
+            r = match.group(0).strip().lower()
+            if r == '4k':
+                r = '2160p'
+            return r
+        else:
+            return ''
+        
+    def _parse_group(self, torName):
+        sstr = cut_ext(torName)
+        match = re.search(r'[@\-￡]\s?(\w+)(?!.*[@\-￡].*)$', sstr, re.I)
+        if match:
+            groupName = match.group(1).strip()
+            # # TODO: BD-50_A_PORTRAIT_OF_SHUNKIN_1976_BC
+            if match.span(1)[0] < 4:
+                return None
+            if groupName.startswith('CMCT') and not groupName.startswith('CMCTV'):
+                groupName = 'CMCT'
+            return groupName
+
+        return None
+        
     def _prepare_title(self):
         self.title = cut_ext(self.title)
         self.title = re.sub(r'^【.*】', '', self.title, flags=re.I)
@@ -111,8 +140,8 @@ class TorTitle:
 
     def _extract_type(self):
         patterns = {
-            's_e': r'\b(S\d+)(E\d+)\b',
-            'season_only': r'(S\d+([\-\+]S?\d+)?)\b(?!.*\bS\d+)',
+            's_e': r'\b(S\d+)(E\d+(-Ep?\d+)?)\b',
+            'season_only': r'(?<![a-zA-Z])(S\d+([\-\+]S?\d+)?)\b(?!.*\bS\d+)',
             'season_word': r'\bSeason (\d+)\b',
             'ep_only': r'\bEp?(\d+)(-Ep?\d+)?\b',
             'cn_season': r'第([一二三四五六七八九十]|\d+)季',
@@ -123,7 +152,7 @@ class TorTitle:
             match = re.search(pattern, self.title, flags=re.IGNORECASE)
             if match:
                 self.type = 'tv'
-                if key == 's_e':
+                if key in ['s_e']:
                     # self.season_int = int(match.group(1))
                     # self.episode_int = int(match.group(2))
                     self.season = match.group(1)
@@ -157,7 +186,7 @@ class TorTitle:
         pattern = r'(' + '|'.join(tag for tag in tags) + r')\b.*$'
         self.title = re.sub(pattern, '', self.title, flags=re.IGNORECASE)
         self.title = self.title.strip()
-
+    
     def _extract_titles(self):
         failsafe = self.title
         self._cut_s_year_season()

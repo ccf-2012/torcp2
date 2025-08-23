@@ -276,6 +276,6 @@ def test_categoryByName(test_input, e1, e2):
 ])    
 def test_parseTorNameMore(test_input, e1, e2, e3):
     tt = tortitle.TorTitle(test_input)
-    mediasource, video, audio = tt.parse_more(test_input)
+    mediasource, video, audio = tt._parse_more(test_input)
     assert e1 == mediasource and e2 == video and e3 == audio
 
