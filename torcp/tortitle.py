@@ -6,10 +6,10 @@ def cut_ext(tor_name):
     if not tor_name:
         return ''
     tortup = os.path.splitext(tor_name)
-    # torext = tortup[1].lower()
-    if re.match(r'\.[0-9a-z]{2,5}$', tortup[1], flags=re.I):
-    # mvext = ['.mkv', '.ts', '.m2ts', '.vob', '.mpg', '.mp4', '.3gp', '.mov', '.tp', '.zip', '.pdf', '.iso', '.ass', '.srt', '.7z', '.rar']
-    # if torext.lower() in mvext:
+    torext = tortup[1].lower()
+    # if re.match(r'\.[0-9a-z]{2,5}$', tortup[1], flags=re.I):
+    mvext = ['.mkv', '.ts', '.m2ts', '.vob', '.mpg', '.mp4', '.3gp', '.mov', '.tp', '.zip', '.pdf', '.iso', '.ass', '.srt', '.7z', '.rar']
+    if torext.lower() in mvext:
         return tortup[0].strip()
     else:
         return tor_name
@@ -68,6 +68,10 @@ class TorTitle:
         self.parse()
 
     def parse(self):
+        self._handle_bracket_title()
+        parsing_target = self.raw_name
+        if self.title != self.raw_name:
+            parsing_target = self.title
         self._prepare_title()
         self._extract_year()
         self._extract_type()
@@ -75,7 +79,7 @@ class TorTitle:
         self._polish_title()
         # self._handle_special_cases()
         self.media_source, self.video, self.audio = self._parse_more(self.raw_name)
-        self.group = self._parse_group(self.raw_name)
+        self.group = self._parse_group(parsing_target)
         self.resolution = self._parse_resolution(self.raw_name)
         self.full_season = (self.type == 'tv') and (self.episode == '')
 
@@ -128,7 +132,35 @@ class TorTitle:
     def _prepare_title(self):
         self.title = cut_ext(self.title)
         self.title = re.sub(r'^【.*】', '', self.title, flags=re.I)
+        self.title = re.sub(r'^\w+TV\b', '', self.title, flags=re.I)
         self.title = delimer_to_space(self.title)
+
+    def _handle_bracket_title(self):
+        if self.title.startswith('[') and self.title.endswith(']'):
+            parts = [part.strip() for part in self.title[1:-1].split('][') if part.strip()]
+            keyword_pattern = r'1080p|2160p|720p|H\.?26[45]|x26[45]'
+            
+            main_part = ''
+            cjk_parts = []
+
+            keyword_idx = -1
+            for idx, part in enumerate(parts):
+                if re.search(keyword_pattern, part, re.I):
+                    keyword_idx = idx
+                    main_part = part
+            
+            if main_part:
+                if re.match(r'^'+keyword_pattern+'$', main_part, flags=re.I):
+                    if keyword_idx > 0:
+                        self.title = parts[keyword_idx-1]
+                        keyword_idx = keyword_idx - 1
+                else:
+                    self.title = main_part
+                if keyword_idx > 0 and contains_cjk(parts[keyword_idx-1]):
+                    full_cntitle = parts[keyword_idx-1]
+                    full_cntitle = re.sub(r'大陆|港台', '', full_cntitle, flags=re.I)
+                    self.cntitle = full_cntitle.split(' ')[0].strip()
+
 
     def _extract_year(self):
         potential_years = re.findall(r'(19\d{2}|20\d{2})(?:\d{4})?\b', self.title)
@@ -193,19 +225,22 @@ class TorTitle:
         failsafe = self.title if len(self.title) > 0 else failsafe
         self._cut_s_keyword()
 
-        self.cntitle = ''
-        if contains_cjk(self.title):
-            self.cntitle = self.title
-            if m := re.search(r"([一-鿆]+[\-0-9a-zA-Z]*)[ :：]+([^一-鿆]+\b)", self.title, flags=re.I):
-                self.cntitle = self.cntitle[:m.span(1)[1]]
-                self.title = m.group(2)
+        if not self.cntitle:
+            if contains_cjk(self.title):
+                self.cntitle = self.title
+                if m := re.search(r"([一-鿆]+[\-0-9a-zA-Z]*)[ :：]+([^一-鿆]+\b)", self.title, flags=re.I):
+                    self.cntitle = self.cntitle[:m.span(1)[1]]
+                    self.title = m.group(2)
 
-            # 删去：汉字之前，有空格分隔的 ascii 字符串
-            if m1 := re.match(r'^([^一-鿆]*)[\s\(\[]+[一-鿆]', self.cntitle, flags=re.I):
-                self.cntitle = self.cntitle.replace(m1.group(1), '').strip()
+                # 删去：汉字之前，有空格分隔的 ascii 字符串
+                if m1 := re.match(r'^([^一-鿆]*)[\s\(\[]+[一-鿆]', self.cntitle, flags=re.I):
+                    self.cntitle = self.cntitle.replace(m1.group(1), '').strip()
 
-            # 取汉字串中第一个空格前部分
-            self.cntitle = re.match(r'^([^ \-\(\[]*)', self.cntitle).group()
+                # 取汉字串中第一个空格前部分
+                if self.cntitle:
+                    match = re.match(r'^([^ \-\(\[]*)', self.cntitle)
+                    if match:
+                        self.cntitle = match.group()
 
         self.title = self.title.strip()
         if not self.title:
@@ -224,7 +259,7 @@ class TorTitle:
         tags = [
             'BTV', r'CCTV\s*\d+(HD|\+)?', 'HunanTV', r'Top\s*\d+',
             r'\b\w+版', r'全\d+集', 'BDMV',
-            'COMPLETE', 'REPACK', 'PROPER', 'REMASTER\w*',
+            'COMPLETE', 'REPACK', 'PROPER', r'REMASTER\w*',
             'iNTERNAL', 'LIMITED', 'EXTENDED', 'UNRATED', 
             "Director's Cut"
         ]

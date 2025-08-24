@@ -3,8 +3,8 @@ import re
 import time
 from loguru import  logger
 import requests
-from torcp import tortitle
-from torcp.torcategory import TorCategory
+from . import tortitle
+from .torcategory import TorCategory
 
 GENRE_LIST_en = [{'id': 28, 'name': 'Action'}, {'id': 12, 'name': 'Adventure'}, {'id': 16, 'name': 'Animation'}, {'id': 35, 'name': 'Comedy'}, 
                  {'id': 80, 'name': 'Crime'}, {'id': 99, 'name': 'Documentary'}, {'id': 18, 'name': 'Drama'}, {'id': 10751, 'name': 'Family'}, 
@@ -28,23 +28,13 @@ GENRE_LIST_cn = [{'id': 28, 'name': '动作'}, {'id': 12, 'name': '冒险'}, {'i
 
 
 
-def transFromCCFCat(cat):
+def _ccfcat_to_tmdbcat(cat):
     if re.match(r'(Movie)', cat, re.I):
         return 'movie'
     elif re.match(r'(TV)', cat, re.I):
         return 'tv'
     else:
         return cat
-
-
-def transToCCFCat(mediatype, originCat):
-    if mediatype == 'tv':
-        return 'TV'
-    elif mediatype == 'movie':
-        if not re.match(r'(movie)', originCat, re.I):
-            return 'Movie'
-    return originCat
-
 
 def tryint(instr):
     try:
@@ -53,25 +43,11 @@ def tryint(instr):
         string_int = 0
     return string_int
 
-def parseTMDbStr(tmdbstr):
-    if tmdbstr.isnumeric():
-        return '', tmdbstr
-    m = re.search(r'(m(ovie)?|t(v)?)?[-_]?(\d+)', tmdbstr.strip(), flags=re.A | re.I)
-    if m:
-        if m[1]:
-            catstr = 'movie' if m[1].startswith('m') else 'tv'
-        else:
-            catstr = ''
-        return catstr, m[4]
-    else:
-        return '', ''
 
 class TMDbNameParser():
     """A class to parse torrent names and query The Movie Database (TMDb) for additional information."""
-    def __init__(self, torcpdb_url, torcpdb_apikey, ccfcat_hard=None):
+    def __init__(self, torcpdb_url, torcpdb_apikey):
         """Initializes the TMDbNameParser object."""
-        self.ccfcatHard = ccfcat_hard
-        self.ccfcat = ''
         self.title = ''
         self.year = 0
         self.tmdbid = 0
@@ -87,34 +63,42 @@ class TMDbNameParser():
         self.poster_path = ''
         self.release_air_date = ''
         self.genres = ''
-        self.release_air_date = ''
-        self.mediaSource = ''
-        self.videoCodec = ''
-        self.audioCodec = ''
+        self.media_source = ''
+        self.video_codec = ''
+        self.audio_codec = ''
         self.imdbid = ''
         self.imdbval = 0.0
+        self.torname = ''
+        self.origin_country = ''
+        self.original_title = ''
+        self.overview = ''
+        self.vote_average = 0
+        self.production_countries = ''
+        self.ccfcat = ''
 
         self.torcpdb_url = torcpdb_url
         self.torcpdb_apikey = torcpdb_apikey
+        # self.tmdb_details = None
 
-    def fixSeasonName(self, seasonStr):
+    def _fix_season_name(self, seasonStr):
         if re.match(r'^Ep?\d+(-Ep?\d+)?$', seasonStr,
                     flags=re.I) or not seasonStr:
             return 'S01'
         else:
             return seasonStr.upper()
 
-    def getGenres(self):
-        ll = []
-        if self.genres:
-            genre_list = GENRE_LIST_cn
-            for x in self.genres:
-                s = next((y for y in genre_list if str(y['id'])==x), None)
-                if s:
-                    ll.append(s['name'])
-        return ll
+    def get_genres_list(self):
+        return [x.strip() for x in self.genres.split(',')]
+        # ll = []
+        # if self.genres:
+        #     genre_list = GENRE_LIST_cn
+        #     for x in self.genres:
+        #         s = next((y for y in genre_list if str(y['id'])==x), None)
+        #         if s:
+        #             ll.append(s['name'])
+        # return ll
 
-    def getGenreStr(self):
+    def get_genres_str(self):
         genrestr = ''
         if self.genres:
             genre_list = GENRE_LIST_cn
@@ -124,89 +108,45 @@ class TMDbNameParser():
                     genrestr += s['name'] 
         return genrestr
 
-    def genreStr2List(self, genrestr):
-        return genrestr.split(',')
-
-    def clearData(self):
-        self.ccfcat = ''
-        self.title = ''
-        self.year = 0
-        self.tmdbid = -1
-        self.tmdbhard = False
-        self.season = ''
-        self.episode = ''
-        self.cntitle = ''
-        self.resolution = ''
-        self.group = ''
-        self.tmdbcat = ''
-        self.original_language = ''
-        self.popularity = 0
-        self.poster_path = ''
-        self.genres = ''
-        self.tmdbDetails = None
-        self.imdbid = ''
-        self.imdbval = 0.0
-        self.origin_country = ''
-        self.original_title = ''
-        self.overview = ''
-        self.vote_average = 0
-        self.production_countries = ''
-
-    def parse(self, torname, useTMDb=False, hasIMDbId=None, hasTMDbId=None, exTitle='', infolink=''):
+    def parse(self, torname, by_tordb=False, imdbid=None, tmdbid=None, extitle='', infolink=''):
         """Parses a torrent name and queries TMDb for more information."""
-        self.clearData()
+        self.torname = torname
         tc = TorCategory(torname)
-        self.ccfcat, self.group = tc.ccfcat, tc.group
-        self.resolution = tc.resolution
+        self.ccfcat, self.group, self.resolution = tc.ccfcat, tc.group, tc.resolution
         tt = tortitle.TorTitle(torname)
         self.title, parseYear, self.season, self.episode, self.cntitle = tt.title, tt.year, tt.season, tt.episode, tt.cntitle 
-        self.mediaSource, self.videoCodec, self.audioCodec = tt.parse_more(torname)
+        self.media_source, self.video_codec, self.audio_codec = tt.media_source, tt.video, tt.audio
         self.year = tryint(parseYear)
 
-        if self.season and (self.ccfcat != 'TV'):
-            # print('Category fixed: ' + movieItem)
-            self.ccfcat = 'TV'
         if self.ccfcat == 'TV':
-            self.season = self.fixSeasonName(self.season)
+            self.season = self._fix_season_name(self.season)
 
-        if self.ccfcatHard:
-            self.ccfcat = self.ccfcatHard
-
-        self.tmdbcat = transFromCCFCat(self.ccfcat)
-        if (not hasIMDbId) and (not hasTMDbId) and (self.tmdbcat not in ['tv', 'movie']):
+        self.tmdbcat = _ccfcat_to_tmdbcat(self.ccfcat)
+        if (not imdbid) and (not tmdbid) and (self.tmdbcat not in ['tv', 'movie']):
             logger.info('can not identify movie/tv, set to movie')
             self.tmdbcat = 'movie'
 
-        if useTMDb:
+        if by_tordb:
             attempts = 0
-            # TODO: 可能可用，待调试
-            # if not hasIMDbId:
-            #     if imdbid := self.checkNameContainsIMDbId(torname):
-            #         hasIMDbId = imdbid
-            # if not hasTMDbId:
-            #     if tmdbid := self.checkNameContainsTMDbId(torname):
-            #         hasTMDbId = tmdbid
-
             while attempts < 3:
                 try:
                     json_data = {}
                     json_data['torname'] = torname
-                    if exTitle:
-                        json_data['extitle'] = exTitle
+                    if extitle:
+                        json_data['extitle'] = extitle
                     if infolink:
                         json_data['infolink'] = infolink
-                    if hasTMDbId:
-                        json_data['tmdbstr'] = hasTMDbId
-                    if hasIMDbId:
-                        json_data['imdbid'] = hasIMDbId
-                    logger.info(f'torname: {torname}, tmdbstr: {hasTMDbId}, imdbid: {hasIMDbId}, exTitle: {exTitle}, infolink: {infolink}')
+                    if tmdbid:
+                        json_data['tmdbstr'] = tmdbid
+                    if imdbid:
+                        json_data['imdbid'] = imdbid
+                    logger.info(f'torname: {torname}, tmdbstr: {tmdbid}, imdbid: {imdbid}, exTitle: {extitle}, infolink: {infolink}')
                     result = self.query_torcpdb(json_data)
                     if result:
-                        self.saveResult(result)
+                        self._save_result(result)
                         logger.success(f'TMDb查得: {self.tmdbcat}-{self.tmdbid}, {self.title}, {self.year}, {self.genres}, {self.origin_country}, {self.original_title}')
-                        self.ccfcat = transToCCFCat(self.tmdbcat, self.ccfcat)
                     else:
-                        logger.warning(f'TMDb 没有结果: {torname}, {exTitle}, {hasIMDbId}, {infolink}')
+                        logger.warning(f'TMDb 没有结果: {torname}, {extitle}, {imdbid}, {infolink}')
 
                     break
                 except:
@@ -234,7 +174,7 @@ class TMDbNameParser():
             print(f"查询失败: {str(e)}")
             raise
 
-    def saveResult(self, result):
+    def _save_result(self, result):
         if "tmdb_title" in result:
             self.title = result["tmdb_title"]
         if "tmdb_cat" in result:
@@ -268,10 +208,8 @@ class TMDbNameParser():
         if "production_countries" in result:
             self.production_countries = result["production_countries"]
 
-
-    def getProductionArea(self):
+    def get_production_area(self):
         if self.tmdbcat == 'tv':
-            # print(self.tmdbDetails.origin_country)
             if self.origin_country:
                 return self.origin_country
             elif self.original_language:
@@ -283,21 +221,4 @@ class TMDbNameParser():
                 return self.original_language
 
         return ''
-        # if self.tmdbDetails and self.tmdbDetails.production_companies:
-        #     r = self.tmdbDetails.production_companies[0].origin_country
-        # return r
 
-    # TODO: to be continue
-    def checkNameContainsIMDbId(self, torname):
-        m = re.search(r'[\[{]]imdb(id)?\=(tt\d+)[\]}]', torname, flags=re.A | re.I)
-        if m:
-            imdbid = m[2]
-            return imdbid
-        return ''
-
-    def checkNameContainsTMDbId(self, torname):
-        m = re.search(r'[\[{]tmdb(id)?[=-](\d+)[\]}]', torname, flags=re.A | re.I)
-        if m:
-            tmdbid = tryint(m[2])
-            return tmdbid
-        return -1
