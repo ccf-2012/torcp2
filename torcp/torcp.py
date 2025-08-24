@@ -12,44 +12,43 @@ import codecs
 import logging
 import xml.etree.ElementTree as ET
 
-from torcp.tmdbparser import TMDbNameParser
-from torcp.torcategory import TorCategory
-from torcp.tortitle import TorTitle, is_0day_name
-from torcp.cacheman import CacheManager
+from .tmdbparser import TMDbNameParser
+from .torcategory import TorCategory
+from .tortitle import TorTitle, is_0day_name
 
 VIDEO_EXTS = ['.mkv', '.mp4', '.ts', '.m2ts', '.mov', '.strm']
-logger = logging.getLogger(__name__)
+from loguru import logger
 
 
 def area5dir(area_code):
-    AREA_DICT = {
-        'useu' : ['GB', 'FR', 'DE', 'IT', 'RU', 'DK', 'NO', 'IS', 'SE', 'FI', 'IE', 'ES', 'PT', 'NL', 'BE', 'AT', 
+    AREA5_DICT = {
+        '欧美' : ['GB', 'FR', 'DE', 'IT', 'RU', 'DK', 'NO', 'IS', 'SE', 'FI', 'IE', 'ES', 'PT', 'NL', 'BE', 'AT', 
             'CH', 'UA', 'BY', 'PL', 'CZ', 'GR', 'TR', 'BG', 'RO', 'LT', 'HU', 'LU', 'MC', 'LI', 'EE', 'LV', 
             'HR', 'RS', 'SK', 'MD', 'SI', 'AL', 'MK', 'AZ', 'GE', 'ME', 'BA', 'CA', 'US', 'MX', 'GT', 'BZ', 
             'SV', 'HN', 'NI', 'CR', 'PA', 'BS', 'CU', 'JM', 'HT', 'DO', 'KN', 'AG', 'DM', 'LC', 'VC', 'BB', 
             'GD', 'TT', 'CO', 'EC', 'VE', 'GF', 'SR', 'PE', 'BO', 'PY', 'BR', 'CL', 'AR', 'UY'],
-        'jp' : ['JP', 'JA'],
-        'kr' : ['KR', 'KO'],
-        'cn' : ['CN', 'ZH'],
-        'hktw': ['HK', 'TW']
+        '日本' : ['JP', 'JA'],
+        '韩国' : ['KR', 'KO'],
+        '大陆' : ['CN', 'ZH'],
+        '港台': ['HK', 'TW']
         }
-    return next((x for x, k in AREA_DICT.items() if area_code in AREA_DICT[x]), 'other')
+    return next((x for x, k in AREA5_DICT.items() if area_code in AREA5_DICT[x]), 'other')
 
 def area7dir(area_code):
-    AREA_DICT = {
-        'us' : ['US'],
+    AREA7_DICT = {
+        '美国' : ['US'],
         'occident' : ['GB', 'FR', 'DE', 'IT', 'RU', 'DK', 'NO', 'IS', 'SE', 'FI', 'IE', 'ES', 'PT', 'NL', 'BE', 'AT', 
             'CH', 'UA', 'BY', 'PL', 'CZ', 'GR', 'TR', 'BG', 'RO', 'LT', 'HU', 'LU', 'MC', 'LI', 'EE', 'LV', 
             'HR', 'RS', 'SK', 'MD', 'SI', 'AL', 'MK', 'AZ', 'GE', 'ME', 'BA', 'CA', 'MX', 'GT', 'BZ', 
             'SV', 'HN', 'NI', 'CR', 'PA', 'BS', 'CU', 'JM', 'HT', 'DO', 'KN', 'AG', 'DM', 'LC', 'VC', 'BB', 
             'GD', 'TT', 'CO', 'EC', 'VE', 'GF', 'SR', 'PE', 'BO', 'PY', 'BR', 'CL', 'AR', 'UY'],
-        'jp' : ['JP', 'JA'],
-        'kr' : ['KR', 'KO'],
-        'cn' : ['CN', 'ZH'],
-        'hk' : ['HK'],
-        'tw' : ['TW']
+        '日' : ['JP', 'JA'],
+        '韩' : ['KR', 'KO'],
+        '大陆' : ['CN', 'ZH'],
+        '港' : ['HK'],
+        '台' : ['TW']
         }
-    return next((x for x, k in AREA_DICT.items() if area_code in AREA_DICT[x]), 'other')
+    return next((x for x, k in AREA7_DICT.items() if area_code in AREA7_DICT[x]), 'other')
 
 def chinese_to_number(chinese_str):
     chinese_numbers = {
@@ -240,8 +239,8 @@ class MediaReNameProcessor:
         cp_location = os.path.abspath(self.args.MEDIA_DIR)
         self.logger.info("=========>>> " + datetime.datetime.now().astimezone().strftime("%Y-%m-%dT%H:%M:%S %z"))
 
-        search_cache = CacheManager(cp_location) if self.args.cache else None
-        if search_cache: search_cache.openCache()
+        # search_cache = CacheManager(cp_location) if self.args.cache else None
+        # if search_cache: search_cache.openCache()
 
         arg_imdb_id = self.args.imdbid if self.args.single else ''
         arg_tmdb_id = self.args.tmdbid if self.args.single else ''
@@ -268,22 +267,22 @@ class MediaReNameProcessor:
                         self.logger.info(f'Process collections: {item_name}')
                         pack_dir = os.path.join(parent_location, item_name)
                         for fn in os.listdir(pack_dir):
-                            if search_cache and search_cache.is_cached(fn):
-                                self.logger.info(f'Skipping. File previously linked: {fn}')
-                                continue
+                            # if search_cache and search_cache.is_cached(fn):
+                            #     self.logger.info(f'Skipping. File previously linked: {fn}')
+                            #     continue
                             self.process_one_dir_item(pack_dir, fn, imdbidstr='')
-                            if search_cache: search_cache.append(fn)
+                            # if search_cache: search_cache.append(fn)
                     else:
-                        if search_cache and search_cache.is_cached(item_name):
-                            self.logger.info(f'Skipping. File previously linked: {item_name}')
-                            continue
+                        # if search_cache and search_cache.is_cached(item_name):
+                        #     self.logger.info(f'Skipping. File previously linked: {item_name}')
+                        #     continue
                         if (folder_imdb_id or folder_tmdb_id) and (parent_location != cp_location):
                             self.process_with_same_imdb(parent_location, folder_imdb_id, folder_tmdb_id)
                         else:
                             self.process_one_dir_item(parent_location, item_name, imdbidstr=folder_imdb_id, tmdbidstr=folder_tmdb_id)
-                        if search_cache: search_cache.append(item_name)
+                        # if search_cache: search_cache.append(item_name)
 
-        if search_cache: search_cache.close_cache()
+        # if search_cache: search_cache.close_cache()
 
     def process_one_dir_item(self, cp_location, item_name, imdbidstr='', tmdbidstr=''):
         self.cur_media_name = item_name
@@ -305,8 +304,8 @@ class MediaReNameProcessor:
         cat = self.set_args_category()
 
         # self.logger.info(f">> title_for_parsing: {title_for_parsing}")
-        p = TMDbNameParser(self.args.torcpdb_url, self.args.torcpdb_apikey, ccfcat_hard=cat)
-        p.parse(title_for_parsing, useTMDb=(self.args.torcpdb_url is not None), hasIMDbId=imdbidstr, hasTMDbId=tmdbidstr, exTitle=self.args.extitle)
+        p = TMDbNameParser(self.args.torcpdb_url, self.args.torcpdb_apikey)
+        p.parse(title_for_parsing, by_tordb=(self.args.torcpdb_url is not None), imdbid=imdbidstr, tmdbid=tmdbidstr, extitle=self.args.extitle)
         p.title = self._fix_nt_name(p.title)
         cat = self.gen_cat_folder_name(p)
 
@@ -482,16 +481,16 @@ class MediaReNameProcessor:
                     ollist = [x.strip() for x in self.config.args.lang.lower().split(',')]
                     area_dir = name_parser.original_language if name_parser.original_language in ollist else 'other'
             elif self.config.args.sep_area:
-                area_dir = name_parser.getProductionArea()
+                area_dir = name_parser.get_production_area()
             elif self.config.args.sep_area5:
-                area_dir = area5dir(name_parser.getProductionArea().upper())
+                area_dir = area5dir(name_parser.get_production_area().upper())
             elif self.config.args.sep_area7:
-                area_dir = area7dir(name_parser.getProductionArea().upper())
+                area_dir = area7dir(name_parser.get_production_area().upper())
 
             genre_dir = area_dir
             if self.config.args.genre:
                 arg_genre_list = [x.strip() for x in self.config.args.genre.lower().split(',')]
-                media_genre_list = [d.lower().strip() for d in name_parser.getGenres()]
+                media_genre_list = [d.lower().strip() for d in name_parser.get_genres_list()]
                 match_genre = next((g for g in arg_genre_list if g in media_genre_list), '')
                 if match_genre:
                     genre_dir = match_genre
@@ -639,7 +638,7 @@ class MediaReNameProcessor:
         test_file = self.get_first_media_file(folder_path)
         if test_file:
             p = TMDbNameParser(self.config.args.torcpdb_url, self.config.args.torcpdb_apikey)
-            p.parse(test_file, useTMDb=False)
+            p.parse(test_file, by_tordb=False)
             if not folder_group:
                 group = p.group
             if not folder_season:
@@ -863,9 +862,8 @@ class MediaReNameProcessor:
                 if not folder_tmdb_parser.tmdbhard and (folder_tmdb_parser.tmdbid <= 0) or count_media_files > 1:
                     fn_ok = is_0day_name(movie_item)
                     if fn_ok:
-                        pf = TMDbNameParser(self.config.args.torcpdb_url, self.config.args.torcpdb_apikey,
-                                            ccfcat_hard=self.set_args_category())
-                        pf.parse(movie_item, useTMDb=(self.config.args.torcpdb_url is not None))
+                        pf = TMDbNameParser(self.config.args.torcpdb_url, self.config.args.torcpdb_apikey)
+                        pf.parse(movie_item, by_tordb=(self.config.args.torcpdb_url is not None))
                         pf.title = self._fix_nt_name(pf.title)
                         if pf.tmdbid > 0 or fn_ok:
                             p = pf
@@ -962,7 +960,7 @@ class MediaReNameProcessor:
         if tmdb_parser.genre_ids:
             genre = ET.SubElement(root, "genre")
             genre_item = ET.SubElement(genre, "item")
-            genre_item.text = tmdb_parser.getGenreStr()
+            genre_item.text = tmdb_parser.get_genres_str()
 
         media_dir = self.fs_manager.get_dest_dir(target_dir, self.CAT_NAME_TV, self.CAT_NAME_MOVIE)
         if not os.path.exists(media_dir):
@@ -973,7 +971,7 @@ class MediaReNameProcessor:
 
     def target_dir_hook(self, target_dir, tmdbidstr='', tmdbcat='', tmdbtitle='', tmdbobj=None):
         export_target_dir = target_dir
-        logger.info('Target Dir: ' + export_target_dir)
+        # logger.info('Target Dir: ' + export_target_dir)
         if self.export_obj:
             self.export_obj.onOneItemTorcped(export_target_dir, self.cur_media_name, tmdbidstr, tmdbcat, tmdbtitle, tmdbobj)
         if self.config.args.after_copy_script:
