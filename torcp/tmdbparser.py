@@ -3,7 +3,7 @@ import re
 import time
 from loguru import  logger
 import requests
-from . import tortitle
+import tortitle
 from .torcategory import TorCategory
 
 GENRE_LIST_en = [{'id': 28, 'name': 'Action'}, {'id': 12, 'name': 'Adventure'}, {'id': 16, 'name': 'Animation'}, {'id': 35, 'name': 'Comedy'}, 

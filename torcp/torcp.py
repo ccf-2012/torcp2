@@ -14,7 +14,7 @@ import xml.etree.ElementTree as ET
 
 from .tmdbparser import TMDbNameParser
 from .torcategory import TorCategory
-from .tortitle import TorTitle, is_0day_name
+from tortitle import TorTitle
 
 VIDEO_EXTS = ['.mkv', '.mp4', '.ts', '.m2ts', '.mov', '.strm']
 from loguru import logger
@@ -56,6 +56,12 @@ def chinese_to_number(chinese_str):
         '六': 6, '七': 7, '八': 8, '九': 9
     }
     return ''.join([str(chinese_numbers[char]) for char in chinese_str if char in chinese_numbers])
+
+
+def is_0day_name(itemstr):
+    # CoComelon.S03.1080p.NF.WEB-DL.DDP2.0.H.264-NPMS
+    m = re.match(r'^\w+.*\b(BluRay|Blu-?ray|720p|1080[pi]|[xh].?26\d|2160p|576i|WEB-DL|DVD|WEBRip|HDTV)\b.*', itemstr, flags=re.A | re.I)
+    return m
 
 class Config:
     """Handles argument parsing and configuration for the script."""
