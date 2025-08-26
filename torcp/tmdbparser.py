@@ -144,7 +144,10 @@ class TMDbNameParser():
                     result = self.query_torcpdb(json_data)
                     if result:
                         self._save_result(result)
-                        logger.success(f'TMDb查得: {self.tmdbcat}-{self.tmdbid}, {self.title}, {self.year}, {self.genres}, {self.origin_country}, {self.original_title}')
+                        if self.tmdbid > 0:
+                            logger.success(f'TMDb查得: {self.tmdbcat}-{self.tmdbid}, {self.title}, {self.year}, {self.genres}, {self.origin_country}, {self.original_title}')
+                        else:
+                            logger.warning(f'TMDb 没有结果: {torname}, {extitle}, {imdbid}, {infolink}')
                     else:
                         logger.warning(f'TMDb 没有结果: {torname}, {extitle}, {imdbid}, {infolink}')
 
@@ -175,6 +178,7 @@ class TMDbNameParser():
             raise
 
     def _save_result(self, result):
+        logger.debug(f"Received from torcpdb: {result}")
         if "tmdb_title" in result:
             self.title = result["tmdb_title"]
         if "tmdb_cat" in result:
