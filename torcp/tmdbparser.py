@@ -146,7 +146,7 @@ class TMDbNameParser():
                         self._save_result(result)
                         if self.tmdbid > 0:
                             if "id_score" in result:
-                                logger.debug(f"identication score: {result["id_score"]}")
+                                logger.debug(f'identication score: {result["id_score"]}')
                             logger.success(f'TMDb查得: {self.tmdbcat}-{self.tmdbid}, {self.title}, {self.year}, {self.genres}, {self.origin_country}, {self.original_title}')
                         else:
                             logger.warning(f'TMDb 没有结果: {torname}, {extitle}, {imdbid}, {infolink}')
