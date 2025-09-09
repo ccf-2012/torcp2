@@ -580,7 +580,7 @@ class MediaReNameProcessor:
         cut_name = self.cut_origin_name(media_filename)
 
         tv_episode = re.sub(r'^Ep\s*', 'E', tv_episode, flags=re.I)
-        tv_name = '%s %s %s%s %s - %s' % (tv_title,
+        tv_name = '%s %s %s%s - %s' % (tv_title,
                                         ('(' + tv_year + ')') if tv_year else '',
                                         tv_season.upper() if tv_season else '',
                                         tv_episode.upper() if tv_episode else '',
