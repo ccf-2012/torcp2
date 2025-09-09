@@ -584,7 +584,6 @@ class MediaReNameProcessor:
                                         ('(' + tv_year + ')') if tv_year else '',
                                         tv_season.upper() if tv_season else '',
                                         tv_episode.upper() if tv_episode else '',
-                                        (tt.sub_episode+' ') if tt.sub_episode else '',
                                         cut_name)
 
         return tv_name.strip()
