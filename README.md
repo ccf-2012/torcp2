@@ -4,6 +4,7 @@
 ---------
 
 ## Last Update
+* 2025.10.6 匹配最新 [TorDB](https://github.com/ccf-2012/tordb)，转为 main 分支
 * 2025.8.9 新增 `--title-regex` 指定文件名或目录名，与此正则匹配上的部分进行识别
 * 2025.8.7 支持 `.strm` 
 * 2024.11.21 查 IMDb 由 episode 获取 series 的 IMDb，再查 TMDb
