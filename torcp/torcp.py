@@ -29,24 +29,24 @@ def area5dir(area_code):
             'GD', 'TT', 'CO', 'EC', 'VE', 'GF', 'SR', 'PE', 'BO', 'PY', 'BR', 'CL', 'AR', 'UY'],
         '日本' : ['JP', 'JA'],
         '韩国' : ['KR', 'KO'],
-        '大陆' : ['CN', 'ZH'],
-        '港台': ['HK', 'TW']
+        '大陆' : ['CN', 'ZH', '大陆', '中国'],
+        '港台': ['HK', 'TW', '香港', '台湾']
         }
     return next((x for x, k in AREA5_DICT.items() if area_code in AREA5_DICT[x]), 'other')
 
 def area7dir(area_code):
     AREA7_DICT = {
         '美国' : ['US'],
-        'occident' : ['GB', 'FR', 'DE', 'IT', 'RU', 'DK', 'NO', 'IS', 'SE', 'FI', 'IE', 'ES', 'PT', 'NL', 'BE', 'AT', 
+        '西方' : ['GB', 'FR', 'DE', 'IT', 'RU', 'DK', 'NO', 'IS', 'SE', 'FI', 'IE', 'ES', 'PT', 'NL', 'BE', 'AT', 
             'CH', 'UA', 'BY', 'PL', 'CZ', 'GR', 'TR', 'BG', 'RO', 'LT', 'HU', 'LU', 'MC', 'LI', 'EE', 'LV', 
             'HR', 'RS', 'SK', 'MD', 'SI', 'AL', 'MK', 'AZ', 'GE', 'ME', 'BA', 'CA', 'MX', 'GT', 'BZ', 
             'SV', 'HN', 'NI', 'CR', 'PA', 'BS', 'CU', 'JM', 'HT', 'DO', 'KN', 'AG', 'DM', 'LC', 'VC', 'BB', 
             'GD', 'TT', 'CO', 'EC', 'VE', 'GF', 'SR', 'PE', 'BO', 'PY', 'BR', 'CL', 'AR', 'UY'],
-        '日' : ['JP', 'JA'],
-        '韩' : ['KR', 'KO'],
-        '大陆' : ['CN', 'ZH'],
-        '港' : ['HK'],
-        '台' : ['TW']
+        '日本' : ['JP', 'JA'],
+        '韩国' : ['KR', 'KO'],
+        '大陆' : ['CN', 'ZH', '大陆', '中国'],
+        '香港' : ['HK', '香港'],
+        '台湾' : ['TW', '台湾']
         }
     return next((x for x, k in AREA7_DICT.items() if area_code in AREA7_DICT[x]), 'other')
 
@@ -58,9 +58,9 @@ def chinese_to_number(chinese_str):
     return ''.join([str(chinese_numbers[char]) for char in chinese_str if char in chinese_numbers])
 
 
-def is_0day_name(itemstr):
+def is_0day_name(item_string):
     # CoComelon.S03.1080p.NF.WEB-DL.DDP2.0.H.264-NPMS
-    m = re.match(r'^\w+.*\b(BluRay|Blu-?ray|720p|1080[pi]|[xh].?26\d|2160p|576i|WEB-DL|DVD|WEBRip|HDTV)\b.*', itemstr, flags=re.A | re.I)
+    m = re.match(r'^\w+.*\b(BluRay|Blu-?ray|720p|1080[pi]|[xh].?26\d|2160p|576i|WEB-DL|DVD|WEBRip|HDTV)\b.*', item_string, flags=re.A | re.I)
     return m
 
 class Config:
@@ -309,9 +309,21 @@ class MediaReNameProcessor:
 
         cat = self.set_args_category()
 
+        tmdbid_val = None
+        tmdbcat_val = None
+        if tmdbidstr:
+            if '-' in tmdbidstr:
+                parts = tmdbidstr.split('-', 1)
+                tmdbcat_val = parts[0]
+                tmdbid_val = parts[1]
+                if tmdbcat_val == 'm':
+                    tmdbcat_val = 'movie'
+            else:
+                tmdbid_val = tmdbidstr
+
         # self.logger.info(f">> title_for_parsing: {title_for_parsing}")
         p = TMDbNameParser(self.args.torcpdb_url, self.args.torcpdb_apikey)
-        p.parse(title_for_parsing, by_tordb=(self.args.torcpdb_url is not None), imdbid=imdbidstr, tmdbid=tmdbidstr, extitle=self.args.extitle)
+        p.parse(title_for_parsing, by_tordb=(self.args.torcpdb_url is not None), imdbid=imdbidstr, tmdbid=tmdbid_val, tmdbcat=tmdbcat_val, extitle=self.args.extitle)
         p.title = self._fix_nt_name(p.title)
         cat = self.gen_cat_folder_name(p)
 
@@ -361,7 +373,7 @@ class MediaReNameProcessor:
             if cat == self.CAT_NAME_TV:
                 self.copy_tv_folder_items(media_src, dest_folder_name, p.season, p.group, p.resolution, p)
             elif cat == self.CAT_NAME_MOVIE:
-                self.process_movie_dir(media_src, p.ccfcat, dest_folder_name, folder_tmdb_parser=p)
+                self.process_movie_dir(media_src, p.tmdbcat, dest_folder_name, folder_tmdb_parser=p)
             elif cat in ['MV']:
                 self.fs_manager.target_copy(media_src, cat)
                 self.target_dir_hook(os.path.join(cat, item_name), tmdbidstr='', tmdbcat='mv', tmdbtitle=item_name, tmdbobj=None)
@@ -425,7 +437,8 @@ class MediaReNameProcessor:
 
     def _has_tmdb_id(self, str_):
         m1 = re.search(r'tmdb(id)?[=-]((m|tv)?-?(\d+))', str_.strip(), re.A | re.I)
-        return m1[4] if m1 else None
+        #TODO：  m1[2] or m1[4]
+        return m1[2] if m1 else None
 
     def _has_imdb_id(self, str_):
         m1 = re.search(r'imdb(id)?\=(tt\d+)', str_.strip(), re.A | re.I)
@@ -516,7 +529,7 @@ class MediaReNameProcessor:
                 media_folder_name = '%s %s' % (subdir_title, tmdb_tail)
 
         else:
-            if name_parser.ccfcat == 'tv':
+            if name_parser.tmdbcat == 'tv':
                 if name_parser.year > 0 and name_parser.season == 'S01':
                     media_folder_name = '%s (%d)' % (name_parser.title, name_parser.year)
                 else:
@@ -580,10 +593,11 @@ class MediaReNameProcessor:
         cut_name = self.cut_origin_name(media_filename)
 
         tv_episode = re.sub(r'^Ep\s*', 'E', tv_episode, flags=re.I)
-        tv_name = '%s %s %s%s - %s' % (tv_title,
+        tv_name = '%s %s %s%s %s - %s' % (tv_title,
                                         ('(' + tv_year + ')') if tv_year else '',
                                         tv_season.upper() if tv_season else '',
                                         tv_episode.upper() if tv_episode else '',
+                                        (tt.sub_episode+' ') if tt.sub_episode else '',
                                         cut_name)
 
         return tv_name.strip()
@@ -765,8 +779,7 @@ class MediaReNameProcessor:
                 self.CAT_NAME_TV = self.config.args.tv_folder_name
                 return self.config.args.tv_folder_name
             else:
-                return parser.ccfcat
-
+                return parser.tmdbcat
 
     def process_bdmv(self, media_src, folder_gen_name, cat_folder, tmdb_parser=None):
         dest_cat_folder_name = os.path.join(cat_folder, folder_gen_name)

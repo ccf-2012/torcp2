@@ -3,8 +3,7 @@ import re
 import time
 from loguru import  logger
 import requests
-import tortitle
-from .torcategory import TorCategory
+from  tortitle  import TorTitle
 
 GENRE_LIST_en = [{'id': 28, 'name': 'Action'}, {'id': 12, 'name': 'Adventure'}, {'id': 16, 'name': 'Animation'}, {'id': 35, 'name': 'Comedy'}, 
                  {'id': 80, 'name': 'Crime'}, {'id': 99, 'name': 'Documentary'}, {'id': 18, 'name': 'Drama'}, {'id': 10751, 'name': 'Family'}, 
@@ -25,16 +24,6 @@ GENRE_LIST_cn = [{'id': 28, 'name': '动作'}, {'id': 12, 'name': '冒险'}, {'i
                  {'id': 10765, 'name': 'Sci-Fi & Fantasy'}, {'id': 10766, 'name': '肥皂剧'}, {'id': 10767, 'name': '脱口秀'}, 
                  {'id': 10768, 'name': 'War & Politics'}]
 
-
-
-
-def _ccfcat_to_tmdbcat(cat):
-    if re.match(r'(Movie)', cat, re.I):
-        return 'movie'
-    elif re.match(r'(TV)', cat, re.I):
-        return 'tv'
-    else:
-        return cat
 
 def tryint(instr):
     try:
@@ -74,11 +63,18 @@ class TMDbNameParser():
         self.overview = ''
         self.vote_average = 0
         self.production_countries = ''
-        self.ccfcat = ''
+        self.tmdbcat = ''
+        self.seasons = None
+        self.full_season = True
 
         self.torcpdb_url = torcpdb_url
         self.torcpdb_apikey = torcpdb_apikey
         # self.tmdb_details = None
+
+    def __repr__(self):
+        return (f"<TMDbNameParser(title='{self.title}', year={self.year}, tmdbid={self.tmdbid}, "
+                f"tmdbcat='{self.tmdbcat}', imdbid='{self.imdbid}', season='{self.season}', "
+                f"episode='{self.episode}')>")
 
     def _fix_season_name(self, seasonStr):
         if re.match(r'^Ep?\d+(-Ep?\d+)?$', seasonStr,
@@ -108,23 +104,50 @@ class TMDbNameParser():
                     genrestr += s['name'] 
         return genrestr
 
-    def parse(self, torname, by_tordb=False, imdbid=None, tmdbid=None, extitle='', infolink=''):
-        """Parses a torrent name and queries TMDb for more information."""
+    def parse(self, torname, by_tordb=False, imdbid=None, tmdbid=None, tmdbcat=None, extitle='', infolink='', override=None):
+        """
+        解析种子标题，并根据配置从TorcpDB查询详细的影视信息。
+
+        此方法首先使用`TorTitle`库对输入的`torname`进行本地解析，
+        提取基础信息（如标题、年份、季数等）。如果`by_tordb`参数为True，
+        则会继续调用`query_torcpdb`方法，向配置的Torcp数据库服务
+        发送请求，以获取更丰富、更准确的TMDB和IMDb信息。
+
+        成功获取数据后，会调用`_save_result`方法，将返回的信息填充到
+        当前对象的属性中。
+
+        Args:
+            torname (str): 要解析的完整种子标题。
+            by_tordb (bool, optional): 是否查询Torcp数据库。默认为 False。
+            imdbid (str, optional): 用于辅助查询的IMDb ID。默认为 None。
+            tmdbid (str, optional): 用于辅助查询的TMDb ID (纯数字)。默认为 None。
+            tmdbcat (str, optional): 用于辅助查询的TMDb 分类 ('movie' 或 'tv')。默认为 None。
+            extitle (str, optional): 附加的标题信息，用于辅助查询。默认为空字符串。
+            infolink (str, optional): 种子来源页面的URL，用于辅助查询。默认为空字符串。
+            override (bool, optional): 为True时会跳过本地数据进行查询. 默认为 None
+
+        Returns:
+            None: 此方法不返回任何值，而是直接更新实例的属性。
+        """
         self.torname = torname
-        tc = TorCategory(torname)
-        self.ccfcat, self.group, self.resolution = tc.ccfcat, tc.group, tc.resolution
-        tt = tortitle.TorTitle(torname)
+        tt = TorTitle(torname)
+        if tt.type not in ['movie', 'tv']:
+            self.title = torname
+            self.tmdbcat = tt.type 
+            logger.info("not movie/tv media, skip")
+            return
+        
         self.title, parseYear, self.season, self.episode, self.cntitle = tt.title, tt.year, tt.season, tt.episode, tt.cntitle 
+        self.tmdbcat, self.group, self.resolution = tt.type, tt.group, tt.resolution
         self.media_source, self.video_codec, self.audio_codec = tt.media_source, tt.video, tt.audio
         self.year = tryint(parseYear)
+        self.full_season = tt.full_season or (tt.type == 'movie')
 
-        if self.ccfcat == 'TV':
-            self.season = self._fix_season_name(self.season)
-
-        self.tmdbcat = _ccfcat_to_tmdbcat(self.ccfcat)
-        if (not imdbid) and (not tmdbid) and (self.tmdbcat not in ['tv', 'movie']):
-            logger.info('can not identify movie/tv, set to movie')
-            self.tmdbcat = 'movie'
+        # if self.tmdbcat == 'tv':
+        #     if tt.full_season and not self.season:
+        #         self.season = 'S01'
+        #     else:
+        #         self.season = self._fix_season_name(self.season)
 
         if by_tordb:
             attempts = 0
@@ -136,27 +159,32 @@ class TMDbNameParser():
                         json_data['extitle'] = extitle
                     if infolink:
                         json_data['infolink'] = infolink
-                    if tmdbid:
-                        json_data['tmdbstr'] = tmdbid
+                    if override:
+                        json_data['override'] = True
+                    
+                    tmdbstr_for_logging = None
+                    if tmdbid and tmdbcat:
+                        json_data['tmdbid'] = str(tmdbid)
+                        json_data['tmdbcat'] = tmdbcat
+                        tmdbstr_for_logging = f'{tmdbcat}-{tmdbid}'
+
                     if imdbid:
                         json_data['imdbid'] = imdbid
-                    logger.info(f'torname: {torname}, tmdbstr: {tmdbid}, imdbid: {imdbid}, exTitle: {extitle}, infolink: {infolink}')
+                    logger.info(f'torname: {torname}, tmdbstr: {tmdbstr_for_logging}, imdbid: {imdbid}, exTitle: {extitle}, infolink: {infolink}')
                     result = self.query_torcpdb(json_data)
-                    if result:
+                    if result and "tmdb_id" in result:
                         self._save_result(result)
-                        if self.tmdbid > 0:
-                            if "id_score" in result:
-                                logger.debug(f'identication score: {result["id_score"]}')
-                            logger.success(f'TMDb查得: {self.tmdbcat}-{self.tmdbid}, {self.title}, {self.year}, {self.genres}, {self.origin_country}, {self.original_title}')
-                        else:
-                            logger.warning(f'TMDb 没有结果: {torname}, {extitle}, {imdbid}, {infolink}')
+                        logger.success(f'TMDb查得: {self.tmdbcat}-{self.tmdbid}, {self.title}, {self.year}, {self.genres}, {self.origin_country}, {self.original_title}')
                     else:
                         logger.warning(f'TMDb 没有结果: {torname}, {extitle}, {imdbid}, {infolink}')
+                        # failsafe
+                        if not self.cntitle and extitle:
+                            self.cntitle = extitle
 
                     break
-                except:
+                except requests.RequestException as e:
                     attempts += 1
-                    logger.warning("TORCPDb connection failed. Trying %d " % attempts)
+                    logger.warning(f"TORCPDb connection failed: {e}. Trying {attempts}/3")
                     time.sleep(3)
 
     def query_torcpdb(self, json_data):
@@ -172,7 +200,7 @@ class TMDbNameParser():
                 json=json_data
             )
             if response.status_code == 404:
-                logger.debug(f'{json_data["torname"]} not found')
+                logger.debug(f'{json_data["torname"]} not found.')
             # response.raise_for_status()  # 如果响应状态码不是200，抛出异常
             return response.json()
         except requests.RequestException as e:
@@ -180,13 +208,15 @@ class TMDbNameParser():
             raise
 
     def _save_result(self, result):
-        # logger.debug(f"Received from torcpdb: {result}")
         if "tmdb_title" in result:
             self.title = result["tmdb_title"]
         if "tmdb_cat" in result:
             self.tmdbcat = result["tmdb_cat"]
         if "tmdb_id" in result:
             self.tmdbid = result["tmdb_id"]
+            if self.tmdbid is None:
+                self.tmdbid = 0
+                logger.debug("tmdbid was None, converted to 0 for custom entry.")
         if "imdb_id" in result:
             self.imdbid = result["imdb_id"]
         if "imdb_val" in result:
@@ -213,6 +243,10 @@ class TMDbNameParser():
             self.vote_average = result["vote_average"]
         if "production_countries" in result:
             self.production_countries = result["production_countries"]
+        if "seasons" in result:
+            self.seasons = result["seasons"]
+        if self.tmdbcat == 'tv' and not self.season:
+            self.season = 'S01'
 
     def get_production_area(self):
         if self.tmdbcat == 'tv':
