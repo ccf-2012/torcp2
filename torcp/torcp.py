@@ -876,14 +876,16 @@ class MediaReNameProcessor:
 
             p = folder_tmdb_parser
             if not (self.config.args.tmdbid and self.config.args.single):
-                if not folder_tmdb_parser.tmdbhard and (folder_tmdb_parser.tmdbid <= 0) or count_media_files > 1:
-                    fn_ok = is_0day_name(movie_item)
-                    if fn_ok:
-                        pf = TMDbNameParser(self.config.args.torcpdb_url, self.config.args.torcpdb_apikey)
-                        pf.parse(movie_item, by_tordb=(self.config.args.torcpdb_url is not None))
-                        pf.title = self._fix_nt_name(pf.title)
-                        if pf.tmdbid > 0 or fn_ok:
-                            p = pf
+                # If folder parser is not hard-coded or there are multiple media files,
+                # parse each media filename individually so we can name them per-file.
+                need_individual_parse = count_media_files > 1 or (not getattr(folder_tmdb_parser, 'tmdbhard', False) and folder_tmdb_parser.tmdbid <= 0)
+                if need_individual_parse:
+                    pf = TMDbNameParser(self.config.args.torcpdb_url, self.config.args.torcpdb_apikey)
+                    pf.parse(movie_item, by_tordb=(self.config.args.torcpdb_url is not None))
+                    pf.title = self._fix_nt_name(pf.title)
+                    # Prefer the per-file parser when TMDb id is found or when there are multiple files
+                    if pf.tmdbid > 0 or count_media_files > 1:
+                        p = pf
 
             cat = self.gen_cat_folder_name(p)
             dest_folder_name = self.gen_media_folder_name(p)
