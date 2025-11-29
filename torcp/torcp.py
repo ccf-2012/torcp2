@@ -736,11 +736,10 @@ class MediaReNameProcessor:
         return tmdb_tail
     
     def gen_movie_origin_name(self, media_src, movie_name, year, name_parser=None):
+        # When --origin-name is used, return only the original filename (basename)
+        # Do not prepend the scraped title/year or tmdb tail.
         origin_name = os.path.basename(media_src)
-        ch1 = ' - '
-        tmdb_tail = self.gen_tmdb_tail(name_parser)
-        media_name = movie_name + ((' (' + year + ')' ) if year else '') + tmdb_tail + ch1 + origin_name
-        return media_name.strip()
+        return origin_name.strip()
 
     def gen_movie_tmdb_origin_name(self, media_src, movie_name, year, name_parser=None):
         origin_name = os.path.basename(media_src)
